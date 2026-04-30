@@ -1,0 +1,136 @@
+# concept-pipeline — 튜닝 가능한 설정값
+# 단계별 가중치, RAG 컬렉션 매핑, 출력 옵션 등을 여기서 관리한다.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5-Axis 평가 루브릭 (4단계에서 사용)
+# ─────────────────────────────────────────────────────────────────────────────
+rubric:
+  scale: 5
+  cutoff: 3.5                    # 종합점수 이상만 5단계 진출 후보
+  axes:
+    - id: A
+      name: 구조적 완성도
+      question: "누구든 같은 그림을 그릴 수 있는가?"
+      weight: 0.15
+      theory_ids: ["00-living-document"]
+
+    - id: B
+      name: 심리적 동기
+      question: "플레이어가 왜 다음 세션을 여는가?"
+      weight: 0.25
+      theory_ids: ["01-sdt-pens", "02-bartle-hexad", "03-octalysis"]
+
+    - id: C
+      name: 인지적 수용성
+      question: "학습 부담이 즐거움을 가리지 않는가?"
+      weight: 0.20
+      theory_ids:
+        - "04-flow-theory"
+        - "05-cognitive-load"
+        - "06-laws-of-ux"
+        - "07-ftue-onboarding"
+
+    - id: D
+      name: 시스템 정합성
+      question: "메커니즘이 의도한 감정으로 수렴하는가?"
+      weight: 0.25
+      theory_ids: ["08-mda-rmda", "09-elemental-tetrad"]
+
+    - id: E
+      name: 실현·지속성
+      question: "약속을 지킬 수 있고, 지킬 가치가 있는가?"
+      weight: 0.15
+      theory_ids:
+        - "10-vertical-slice-scope"
+        - "11-f2p-kpi"
+        - "12-loss-aversion-bm"
+        - "13-variable-ratio-ethics"
+        - "14-publisher-greenlight"
+
+  # 5점 척도 정의 (모든 축 공통)
+  scale_definition:
+    5: "매우 뛰어남 — 이론적 근거와 명확한 구현 가능성을 모두 갖춤"
+    4: "양호 — 약간의 약점은 있으나 전체적으로 견고"
+    3: "보통 — 통과 가능하나 보강 필요"
+    2: "미흡 — 핵심 갭 존재, 큰 폭의 수정 필요"
+    1: "결정적 결함 — 근본 재설계 필요"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RAG 컬렉션 매핑
+# ─────────────────────────────────────────────────────────────────────────────
+# status:
+#   ready     - hwicortex에 등록되어 즉시 사용 가능
+#   pending   - 미등록. optional: true 인 단계에서는 자동 스킵
+#   broken    - 등록되었으나 인덱스 문제 있음 (수동 점검 필요)
+rag:
+  default_options: "--json -n 5"
+  fallback_message: "RAG 컬렉션 '{collection}' 미등록. LLM 자체 지식으로 대체."
+
+  collections:
+    gdd-evaluation:
+      status: ready
+      description: "5-Axis GDD 평가 이론 14종 (SDT, Bartle, Octalysis, Flow, CLT, Laws of UX, FTUE, MDA/RMDA, Tetrad, VS scope, F2P KPI, Loss Aversion, Variable Ratio, Publisher Greenlight)"
+      local_copy_path: "{pipeline_root}/rag-data/gdd-evaluation"
+      used_in_steps: [4, 5, 6]
+      docs_count: 14
+
+    gdd-wisdom:
+      status: pending
+      description: "GDD 메타 원칙·표준 컬렉션 (CCGS distilled). 8섹션, 기둥/안티기둥, 레이어링, 양방향 의존성, Game Feel, 안티패턴, 브레인스토밍, Cross-GDD, 고위험 시스템."
+      suggested_path: "{pipeline_root}/rag-data/gdd-wisdom"
+      used_in_steps: [2, 4, 5, 6]
+      docs_count: 9
+
+    architecture-patterns:
+      status: pending
+      description: "아키텍처 표준 컬렉션 (CCGS distilled). ADR, Control Manifest, TR-ID, 테스트 증거 매트릭스, 시스템 인터페이스 계약."
+      suggested_path: "{pipeline_root}/rag-data/architecture-patterns"
+      used_in_steps: [4, 5, 6]
+      docs_count: 5
+
+    indie-postmortems:
+      status: pending
+      description: "인디 게임 포스트모템 — 차원 E(스코프·실현·시장성) 평가 강화 (선택)"
+      suggested_sources:
+        - "GDC Vault 공개 포스트모템"
+        - "155 indie postmortems study"
+        - "솔로/소규모 사례 (Failbetter, Subset, Cellar Door)"
+      used_in_steps: [4]
+
+    market-snapshots:
+      status: pending
+      description: "장르별 시장 데이터 — 차원 E(시장성) 평가 (선택)"
+      suggested_sources:
+        - "gamalytic"
+        - "VG Insights"
+        - "SteamDB 인디 보고서"
+      used_in_steps: [4]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 산출물 형식 옵션
+# ─────────────────────────────────────────────────────────────────────────────
+output:
+  drafts:
+    target_length_words: [800, 1500]   # 2단계 얇은 초안 분량
+    include_hypothesis: true            # 검증 가설 H-1, H-2 포함
+
+  evaluation:
+    include_per_axis_quotes: true       # 각 점수에 RAG 인용 1~2개 첨부
+    include_strength_weakness: true
+    include_recommendation: true        # 사용자가 선택 시 참고할 권장사항
+
+  detailed_gdd:
+    target_length_pages: [5, 10]
+    must_include_sections: [개요, 코어메카닉, 시스템5개이상, 공식, 엣지케이스, 인수기준]
+
+  integrated_spec:
+    target_length_pages: [10, 25]
+    target_audience: "프로토타입 제작자 (본인 또는 솔로 개발자)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 환경
+# ─────────────────────────────────────────────────────────────────────────────
+env:
+  hwicortex_bin: hwicortex          # PATH 에 있다고 가정
+  workspace_root: "{pipeline_root}/workspace"
+  state_filename: state.yaml

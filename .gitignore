@@ -1,0 +1,18 @@
+# macOS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# 진행 중인 본인 작업물 — 다른 사람은 자기 슬러그로 시작
+workspace/*
+!workspace/.gitkeep
+
+# 단계 재실행 백업·임시
+*.desktop-backup.md
+*.bak
+*.tmp
+
+# OS / 시스템
+Thumbs.db
