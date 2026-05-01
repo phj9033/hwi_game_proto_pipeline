@@ -239,6 +239,23 @@ hwicortex collection list 2>&1 | grep -q "<collection-name>"
   - `optional: true` → "RAG skipped: <컬렉션> (LLM 자체 지식 사용)" 1줄 알리고 진행
   - `required: true` → 단계 중단, 사용자에게 컬렉션 등록 요청 후 멈춤
 
+### 8.1 status 자동 동기화 (v0.2~)
+
+`config.yaml` 의 `rag.collections.<name>.status` (`ready`/`pending`/`broken`) 가 *실제* 등록 상태와 어긋나면 사용자에게 1회 안내:
+
+**부팅 시 1회** (활성 프로젝트 부팅 직후, §0 의 마이그레이션 다음):
+```bash
+hwicortex collection list 2>&1 > /tmp/cp-rag-list.txt
+# 파싱 실패 시(hwicortex 미설치 등) — 모든 컬렉션 status='pending' 으로 간주, 동기화 스킵
+```
+1. `config.yaml.rag.collections` 의 각 컬렉션에 대해:
+   - 실제 등록 ✓ but status != `ready`  → "RAG: '<name>' 등록되었으나 config.yaml status 미갱신 (현재: <status>). 'ready' 로 바꾸면 본 단계부터 사용." 안내
+   - 실제 등록 ✕ but status == `ready` → "RAG: '<name>' status 'ready' 인데 등록 ✕. 'pending' 으로 갱신 권장." 안내
+2. 사용자가 *config.yaml 갱신* 을 명시 위임하면 직접 수정. 그렇지 않으면 안내만 하고 흐름 계속.
+3. 한 세션 내 중복 안내 ✕ — 부팅 시 1회로 충분.
+
+이 동기화는 *진단* 이지 *강제* ✕. RAG 미등록은 여전히 `optional: true` 로 흐른다.
+
 ## 9. 완료 처리
 
 state.current_step == 7 게이트 통과 시:

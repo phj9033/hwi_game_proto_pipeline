@@ -37,6 +37,9 @@ changelog:
       - "단계 6 iteration_log 섹션 신규 — ITERATION_LOG.md 작성 규약 정식 등재 (append-only, 5 필드)"
       - "pipeline.backup_dir/.archive 정책 신규 — 백업·임시본을 워크스페이스 루트와 분리"
       - "session-start.sh 환경변수화 — CONCEPT_PIPELINE_ROOT 오버라이드 지원"
+      - "단계 6 changelog_doc 섹션 신규 — 06-changelog.md 분리 (SSOT 본문 다이어트, append-only)"
+      - "단계 7 게이트에 SSOT 본문 변경이력 항목 검사 추가"
+      - "RAG 컬렉션 status 자동 동기화 (SKILL.md §8.1) — 부팅 시 1회 진단"
   - version: "0.1"
     date: "2026-04-28"
     changes:
@@ -54,7 +57,7 @@ state_schema:
     pipeline_version: string         # pipeline.yaml 의 version 과 매칭
     current_step: integer            # 1~7 (8 = 완료)
     completed_steps: array           # [{id, slug, completed_at, output_files}]
-    artifacts: object                # concept, drafts[], selected_branch, eval_scores, detailed_gdd, integrated_spec, art_bible, tech_spec
+    artifacts: object                # concept, drafts[], selected_branch, eval_scores, detailed_gdd, integrated_spec, art_bible, tech_spec, changelog
     notes: array                     # 중요 이벤트 로그
 
   resume_fields:
@@ -110,6 +113,7 @@ state_schema:
       integrated_spec: null
       art_bible: null
       tech_spec: null
+      changelog: null
     last_pause_reason: "단계 5 - 시스템 인벤토리 섹션 응답 대기"
     last_pause_at: "2026-04-28T16:35:00"
     last_user_response_at: "2026-04-28T16:30:00"
@@ -261,7 +265,24 @@ steps:
     family_principle: |
       SSOT 단일 진실. 시점 문서는 *인용·확장* 만, *복제 ✕*.
       룰 변경은 06-integrated-spec.md 한 곳만 수정 → drift 차단.
-      부록 X 변경 이력은 SSOT 에만 박혀 단일 타임라인 유지.
+      변경 이력은 별도 06-changelog.md 에 *append-only* 로 자라남 (SSOT 본문은 현재 진실만).
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 부속 산출물: 06-changelog.md (v0.2~ SSOT 분리)
+    # ─────────────────────────────────────────────────────────────────────
+    # SSOT 본문(06-integrated-spec.md) 은 *현재 진실*만 담고,
+    # 변경 이력은 본 파일에 *append-only* 로 자라남.
+    # SSOT 의 부록 X 는 "→ 06-changelog.md 참조" 1줄 안내로만 남기고 본문 ✕.
+    # 단계 6 *최초 작성 시점*엔 비어있을 수 있음 → 단계 7 게이트 검증 ✕.
+    changelog_doc:
+      filename: "06-changelog.md"
+      mode: "append-only"
+      trigger: "SSOT 룰·시스템·AC·EC 가 변경될 때마다"
+      schema:
+        entry_header: "- {YYYY-MM-DD} v{N.N} — {요약}"
+        entry_body: "들여쓰기 후 변경 항목 bullet (어느 섹션·어느 룰·왜)"
+      cross_reference:
+        - "SSOT 본문에서 부록 X 는 → 06-changelog.md 인용 1줄로만 남김"
 
     # ─────────────────────────────────────────────────────────────────────
     # 부속 산출물: ITERATION_LOG.md (v0.2~ 정식 등재)
@@ -327,13 +348,18 @@ steps:
           must_contain_pattern: "06-integrated-spec\\.md"
           min_count: 3
           fail_message: "tech-spec 이 SSOT 인용 ✕. §F·§G·§H 룰을 복제했을 가능성. SSOT 인용 링크 형태로 재작성 필요."
-        # 시점 문서가 *부록 X 변경이력* 을 복제했는지 검증 (SSOT 에만 박혀야 함)
+        # 시점 문서가 *변경 이력* 을 복제했는지 검증 (06-changelog.md 단일 진실)
         - file: "06-art-bible.md"
-          must_not_contain_pattern: "^부록 X|^## 부록 X|^### 변경 이력"
-          fail_message: "art-bible 에 부록 X(변경이력)이 복제됨. SSOT 에만 박혀야 함."
+          must_not_contain_pattern: "^## 부록 X|^## 변경 이력|^### 변경 이력"
+          fail_message: "art-bible 에 변경 이력이 복제됨. 06-changelog.md 에만 박혀야 함."
         - file: "06-tech-spec.md"
-          must_not_contain_pattern: "^부록 X|^## 부록 X|^### 변경 이력"
-          fail_message: "tech-spec 에 부록 X(변경이력)이 복제됨. SSOT 에만 박혀야 함."
+          must_not_contain_pattern: "^## 부록 X|^## 변경 이력|^### 변경 이력"
+          fail_message: "tech-spec 에 변경 이력이 복제됨. 06-changelog.md 에만 박혀야 함."
+        # SSOT 본문에 변경 이력 *큰 본문* 이 박히지 않았는지 약한 검증 (1줄 인용 안내는 OK)
+        # SSOT 가 본문 200줄 이상 변경 이력을 머금으면 "Date v..." 형식 항목이 보통 5+ 회 등장 → 5 이상이면 분리 권장
+        - file: "06-integrated-spec.md"
+          must_not_contain_pattern: "^- 20[0-9]{2}-[0-9]{2}-[0-9]{2} v[0-9]"
+          fail_message: "SSOT 본문에 변경 이력 항목이 박힘. 06-changelog.md 로 분리 필요 (v0.2~ 정책)."
     on_complete:
       message: |
         프로토타입 준비 완료. 다음 단계는 별도 워크플로우로 관리.
