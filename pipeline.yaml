@@ -40,6 +40,9 @@ changelog:
       - "단계 6 changelog_doc 섹션 신규 — 06-changelog.md 분리 (SSOT 본문 다이어트, append-only)"
       - "단계 7 게이트에 SSOT 본문 변경이력 항목 검사 추가"
       - "RAG 컬렉션 status 자동 동기화 (SKILL.md §8.1) — 부팅 시 1회 진단"
+      - "tests/pipeline_smoke.sh 신규 — YAML/prompts/hooks/version/게이트 패턴 25 항목 검증"
+      - "session-start.sh yq 폴백 — yq 있으면 사용, 없으면 grep 으로 자동 폴백"
+      - "단계 2 분기 축 결정 근거 산출물화 — 각 드래프트에 '왜 이 변주' 필드 필수"
   - version: "0.1"
     date: "2026-04-28"
     changes:

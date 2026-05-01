@@ -33,11 +33,19 @@ if [[ ! -f "$STATE_FILE" ]]; then
   exit 0
 fi
 
-# 간단 파싱 (yq 없이 grep 으로)
-CURRENT_STEP=$(grep "^current_step:" "$STATE_FILE" | sed 's/current_step: *//' | tr -d '"')
-LAST_PAUSE=$(grep "^last_pause_reason:" "$STATE_FILE" | sed 's/last_pause_reason: *//' | tr -d '"')
-LAST_PAUSE_AT=$(grep "^last_pause_at:" "$STATE_FILE" | sed 's/last_pause_at: *//' | tr -d '"')
-COMPLETED_COUNT=$(grep -c "^  - { id:" "$STATE_FILE" 2>/dev/null || echo 0)
+# YAML 파싱 — yq 있으면 사용, 없으면 grep/sed 폴백
+# yq 는 멀티라인·따옴표·중첩 키에 안전. grep 폴백은 단순 단일 라인 키만 지원.
+if command -v yq >/dev/null 2>&1; then
+  CURRENT_STEP=$(yq -r '.current_step // ""' "$STATE_FILE")
+  LAST_PAUSE=$(yq -r '.last_pause_reason // ""' "$STATE_FILE")
+  LAST_PAUSE_AT=$(yq -r '.last_pause_at // ""' "$STATE_FILE")
+  COMPLETED_COUNT=$(yq -r '.completed_steps | length' "$STATE_FILE" 2>/dev/null || echo 0)
+else
+  CURRENT_STEP=$(grep "^current_step:" "$STATE_FILE" | sed 's/current_step: *//' | tr -d '"')
+  LAST_PAUSE=$(grep "^last_pause_reason:" "$STATE_FILE" | sed 's/last_pause_reason: *//' | tr -d '"')
+  LAST_PAUSE_AT=$(grep "^last_pause_at:" "$STATE_FILE" | sed 's/last_pause_at: *//' | tr -d '"')
+  COMPLETED_COUNT=$(grep -c "^  - { id:" "$STATE_FILE" 2>/dev/null || echo 0)
+fi
 
 # 단계 이름 매핑
 case "$CURRENT_STEP" in
