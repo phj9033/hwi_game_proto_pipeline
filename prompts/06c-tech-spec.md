@@ -6,8 +6,11 @@ SSOT(`06-integrated-spec.md`) 의 §F 아키텍처·§G 데이터 스키마·§H
 
 ## 입력
 - `workspace/<slug>/06-integrated-spec.md` (SSOT, 필수)
-- (있으면) `workspace/<slug>/prototype/` 디렉토리 — 실제 코드와 SSOT 매핑 추출
-- (있으면) `workspace/<slug>/ITERATION_LOG.md` — 빌드 변경 이력
+- `workspace/<slug>/prototype/` 디렉토리 (있으면) — 실제 코드와 SSOT 매핑 추출
+- `workspace/<slug>/ITERATION_LOG.md` (있으면) — 빌드 변경 이력. 작성 규약은
+  `pipeline.yaml` 단계 6 의 `iteration_log` 섹션 참조 (append-only, 라운드별 5 필드).
+  본 문서 갱신 시 *최근 N 라운드의 변경* 항목을 반영해 *모듈 매핑·시그널 카탈로그* 가
+  실제 코드와 어긋나지 않게 한다.
 
 ## 산출물
 `workspace/<slug>/06-tech-spec.md`

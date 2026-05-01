@@ -62,7 +62,11 @@ claude
 스킬이 자동 로드되며 활성 프로젝트 슬러그를 묻는 것부터 시작한다.
 
 > **클론 위치**: `~/concept-pipeline` 외 경로에 두어도 동작한다. 단 `rag-data/README.md` 등 문서의 예시 명령은 `~/concept-pipeline` 기준이므로 본인 경로로 치환.
-> **session-start 훅**: `.claude/hooks/session-start.sh` 가 `$HOME/concept-pipeline` 을 하드코딩하므로, 다른 경로에 두려면 이 훅의 `PIPELINE_ROOT` 변수를 본인 경로로 수정.
+> **session-start 훅**: 기본값 `$HOME/concept-pipeline`. 다른 경로면 환경변수로 오버라이드:
+> ```bash
+> export CONCEPT_PIPELINE_ROOT="$HOME/work/concept-pipeline"
+> ```
+> (`.zshrc` / `.bashrc` 에 박아두면 셸 재시작 후 자동 적용)
 
 ## 사용법
 
@@ -205,8 +209,7 @@ SessionStart 훅:
 
 ## 알려진 이슈 / TODO
 
-- **`ITERATION_LOG.md` 명세 미정**: 단계 6c (`prompts/06c-tech-spec.md`)가 "있으면 참고 입력으로 쓴다"고만 언급. 작성 시점·트리거·스키마가 파이프라인에 정의되어 있지 않음. → 별도 보강 필요.
-- **`session-start.sh` 경로 하드코딩**: `PIPELINE_ROOT="$HOME/concept-pipeline"` 고정. 다른 경로 사용 시 본인이 수정 필요. → 향후 환경변수화 검토.
+- **현재 알려진 이슈 없음** — v0.2 에서 ITERATION_LOG.md 정식 등재 (`pipeline.yaml` 단계 6 `iteration_log` 섹션 참조), session-start.sh 환경변수화, 단계 7 게이트 강화 완료.
 
 ## 라이선스
 

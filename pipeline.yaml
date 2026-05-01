@@ -8,6 +8,14 @@ pipeline:
   workspace_root: ./workspace
   language: ko                   # 산출물 한국어 작성
   config_ref: config.yaml
+  # 백업·임시본 정책 (v0.2~)
+  # 모든 백업·아카이브는 워크스페이스 루트가 아닌 .archive/ 하위에 둔다.
+  # 산출물(*.md)과 백업이 한 디렉토리에 섞이지 않도록 분리.
+  backup_dir: .archive            # workspace/<slug>/.archive/ 로 해석
+  backup_naming:
+    redo: "{step_id}-{slug}-{timestamp}/"          # /cp-redo 백업 (디렉토리)
+    migration: "state-pre-migration-{timestamp}.yaml"
+    manual: "{filename}.backup-{timestamp}{ext}"   # 수동 보존 시
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CHANGELOG (pipeline 자체 구조 변경 이력)
@@ -26,6 +34,9 @@ changelog:
       - "단계 7 게이트에 cross_reference_check 추가 (시점 문서 SSOT 인용 검증)"
       - "state_schema.deprecated_fields 추가 (마이그레이션 메커니즘)"
       - "pipeline.version 을 string 으로 (semver 대비)"
+      - "단계 6 iteration_log 섹션 신규 — ITERATION_LOG.md 작성 규약 정식 등재 (append-only, 5 필드)"
+      - "pipeline.backup_dir/.archive 정책 신규 — 백업·임시본을 워크스페이스 루트와 분리"
+      - "session-start.sh 환경변수화 — CONCEPT_PIPELINE_ROOT 오버라이드 지원"
   - version: "0.1"
     date: "2026-04-28"
     changes:
@@ -251,6 +262,31 @@ steps:
       SSOT 단일 진실. 시점 문서는 *인용·확장* 만, *복제 ✕*.
       룰 변경은 06-integrated-spec.md 한 곳만 수정 → drift 차단.
       부록 X 변경 이력은 SSOT 에만 박혀 단일 타임라인 유지.
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 부속 산출물: ITERATION_LOG.md (v0.2~ 정식 등재)
+    # ─────────────────────────────────────────────────────────────────────
+    # 단계 6 *완료 시점*엔 존재하지 않아도 OK (단계 7 게이트 검증 ✕).
+    # 단계 6 이후 *프로토타입 빌드 후속 워크플로우* 가 라운드별로 append.
+    # 본 파이프라인이 정의하는 것은 *작성 규약·스키마* 만 — 자라나는 시점은 후속 책임.
+    # 06-tech-spec.md / 06b-art-bible.md 가 본 파일을 정식 입력으로 사용.
+    iteration_log:
+      filename: "ITERATION_LOG.md"
+      mode: "append-only"            # 라운드는 추가만, 기존 라운드 수정 ✕
+      trigger: "프로토타입 빌드 라운드 종료 시 (사용자 피드백 → 변경 → 결과 1 사이클 완료)"
+      schema:
+        round_header: "## v{N} — {라운드명} ({YYYY-MM-DD})"
+        round_fields:                # 각 라운드 본문 5 필드 (전부 또는 일부)
+          - "**구성**: 이번 라운드의 빌드 구성 / 메인 변화"
+          - "**사용자 피드백**: 인용 형태로 *원문 그대로*"
+          - "**진단**: 피드백 → 원인 추적 (1~3줄)"
+          - "**변경**: 코드/명세 변경 항목 (bullet)"
+          - "**결과**: 변경 후 측정·관찰 (다음 라운드 트리거)"
+        cross_reference:
+          - "변경이 SSOT 룰을 건드리면 → 06-integrated-spec.md 부록 X 에도 1줄 등재"
+          - "변경이 신규 시그널/모듈 도입이면 → 06-tech-spec.md 의 시그널 카탈로그 갱신"
+          - "변경이 신규 에셋 슬롯이면 → 06-art-bible.md 슬롯 맵 갱신"
+      naming_rule: "라운드 N 은 정수 단조 증가. v3.1 같은 patch bump 는 같은 사이클 내 보강에만"
 
   - id: 7
     slug: ready

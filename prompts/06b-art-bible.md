@@ -7,7 +7,9 @@ SSOT(`06-integrated-spec.md`) 의 §E 비주얼·오디오 톤 + §G.1 어종 �
 ## 입력
 - `workspace/<slug>/06-integrated-spec.md` (SSOT, 필수)
 - `workspace/<slug>/05-detailed-gdd.md` (보조)
-- (있으면) `workspace/<slug>/prototype/` 디렉토리 — 현재 placeholder 자산 위치 식별
+- `workspace/<slug>/prototype/` 디렉토리 (있으면) — 현재 placeholder 자산 위치 식별
+- `workspace/<slug>/ITERATION_LOG.md` (있으면) — 신규 슬롯·시각 변경 추적
+  (작성 규약 = `pipeline.yaml` 단계 6 `iteration_log` 섹션)
 
 ## 산출물
 `workspace/<slug>/06-art-bible.md`

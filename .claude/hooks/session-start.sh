@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 # concept-pipeline SessionStart hook
 # 디렉토리 진입 시 활성 프로젝트 상태를 한 화면에 표시한다.
+#
+# 클론 위치 오버라이드:
+#   다른 경로에 클론한 경우 환경변수로 지정.
+#   예) export CONCEPT_PIPELINE_ROOT="$HOME/work/concept-pipeline"
 
 set -e
 
-PIPELINE_ROOT="$HOME/concept-pipeline"
+PIPELINE_ROOT="${CONCEPT_PIPELINE_ROOT:-$HOME/concept-pipeline}"
 ACTIVE_FILE="$PIPELINE_ROOT/workspace/.active"
 
 echo "=== concept-pipeline ==="
