@@ -168,16 +168,22 @@ state.yaml 즉시 저장
 1. `completion_check` 의 모든 조건 검증 (순서대로):
    - **`all_files_exist`** — 각 파일에 대해 `test -f workspace/<slug>/<file>`
    - **`sections_present_in`** — 각 파일에 `required_sections` 의 모든 항목이 헤더(`#`/`##`/`###`)로 등장하는지 grep
-   - **`cross_reference_check`** (v0.2~, 단계 7) — 각 항목별:
-     - `must_contain_pattern` 있으면: `grep -E -c "<pattern>" <file>` 결과가 `min_count` 이상인지
-     - `must_not_contain_pattern` 있으면: `grep -E -c "<pattern>" <file>` 결과가 0 인지
+   - **`cross_reference_check`** (v0.2~, 단계 3·7 모두) — 각 항목별:
+     - `must_contain_pattern` 있으면: `grep -E "<pattern>" <file> | wc -l` 결과가 `min_count` 이상인지
+     - `must_not_contain_pattern` 있으면: 같은 방식 결과가 0 인지
      - 실패 시 `fail_message` 를 사용자에게 1줄 보고
+     - 단계 3 의 cross_reference 는 *content* 검증 (예: "왜 이 변주" 필드)
+     - 단계 7 의 cross_reference 는 *깊이* 검증 (시점 문서가 SSOT 의 *적절한 섹션* 인용 — art-bible §E·§G.1 / tech-spec §F·§G·§I)
 2. 통과 → state 갱신 + 다음 단계로 즉시 자동 진입 (질문 없음)
 3. 실패 → 어떤 항목이 어느 이유로 실패했는지 1줄로 보고 + 멈춤
    ```
    state.last_pause_reason = "단계 N 게이트 실패: <fail_message 또는 누락 파일·섹션>"
    ```
-   - `cross_reference_check` 실패는 *복구 가능* — 사용자에게 "재작성 후 /cp-redo 6" 안내
+   - `cross_reference_check` 실패는 *복구 가능* — 사용자에게 "재작성 후 /cp-redo N" 안내
+   - 단계 3 실패 시 → `/cp-redo 2` (드래프트 재작성)
+   - 단계 7 실패 시 → `/cp-redo 6` (시점 문서 재작성)
+
+**grep 카운트 주의**: `grep -c` 는 0 매치 시 exit 1 이라 `|| echo 0` 패턴이 stdout 에 "0" 을 두 번 박는다. `grep -E "..." <file> | wc -l | tr -d ' '` 로 계산하라.
 
 ## 6. 사용자 응답 후 재개 처리
 

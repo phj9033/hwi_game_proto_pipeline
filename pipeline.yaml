@@ -4,7 +4,7 @@
 
 pipeline:
   name: concept-to-prototype
-  version: "0.2"
+  version: "0.2.1"
   workspace_root: ./workspace
   language: ko                   # 산출물 한국어 작성
   config_ref: config.yaml
@@ -27,6 +27,12 @@ pipeline:
 #   - 게이트(completion_check) 강화     → patch (0.2 → 0.2.1)
 #   - 호환 ✕ 변경 (재실행 필요)         → major bump (0.x → 1.0)
 changelog:
+  - version: "0.2.1"
+    date: "2026-05-01"
+    changes:
+      - "단계 3 게이트 강화 — sections_present_in (분기 축) + cross_reference_check ('왜 이 변주' content 검증)"
+      - "단계 7 cross_reference 깊이 강화 — art-bible §E·§G.1 / tech-spec §F·§G·§I 인용 의무화"
+      - "tests/pipeline_smoke.sh: 25 → 35 항목 (분기 축 + 시점 인용 깊이 추가)"
   - version: "0.2"
     date: "2026-05-01"
     changes:
@@ -182,6 +188,28 @@ steps:
         - "02-draft-A.md"
         - "02-draft-B.md"
         - "02-draft-C.md"
+      sections_present_in:
+        - file: "02-draft-A.md"
+          required_sections: ["분기 축"]
+        - file: "02-draft-B.md"
+          required_sections: ["분기 축"]
+        - file: "02-draft-C.md"
+          required_sections: ["분기 축"]
+      # content 게이트 (v0.2~) — 분기 축 결정의 *왜* 가 휘발되지 않게.
+      # 각 드래프트가 "왜 이 변주를 선택했나" 항목을 가져야 함.
+      cross_reference_check:
+        - file: "02-draft-A.md"
+          must_contain_pattern: "왜 이 변주"
+          min_count: 1
+          fail_message: "02-draft-A.md 에 '왜 이 변주를 선택했나' 필드 누락. prompts/02-draft.md 의 §분기 축 형식 준수 필요."
+        - file: "02-draft-B.md"
+          must_contain_pattern: "왜 이 변주"
+          min_count: 1
+          fail_message: "02-draft-B.md 에 '왜 이 변주를 선택했나' 필드 누락."
+        - file: "02-draft-C.md"
+          must_contain_pattern: "왜 이 변주"
+          min_count: 1
+          fail_message: "02-draft-C.md 에 '왜 이 변주를 선택했나' 필드 누락."
 
   - id: 4
     slug: evaluate-5axis
@@ -350,7 +378,31 @@ steps:
         - file: "06-tech-spec.md"
           must_contain_pattern: "06-integrated-spec\\.md"
           min_count: 3
-          fail_message: "tech-spec 이 SSOT 인용 ✕. §F·§G·§H 룰을 복제했을 가능성. SSOT 인용 링크 형태로 재작성 필요."
+          fail_message: "tech-spec 이 SSOT 인용 ✕. §F·§G·§I 룰을 복제했을 가능성. SSOT 인용 링크 형태로 재작성 필요."
+        # 깊이 검증 (v0.2.1~) — *어느 섹션을* 인용하는지까지 본다.
+        # art-bible 은 §E (비주얼·오디오 톤) + §G.1 (어종 서사) 가 자연스러운 인용처.
+        - file: "06-art-bible.md"
+          must_contain_pattern: "§E"
+          min_count: 1
+          fail_message: "art-bible 이 §E (비주얼·오디오 톤) 인용 ✕. 팔레트·톤 키워드는 §E 기반이어야 함."
+        - file: "06-art-bible.md"
+          must_contain_pattern: "§G\\.1|§G[ .]"
+          min_count: 1
+          fail_message: "art-bible 이 §G.1 (어종 서사) 또는 §G 인용 ✕. 어종 슬롯 정의는 §G 기반이어야 함."
+        # tech-spec 은 §F (아키텍처) + §G (데이터 스키마) + §I (AC) 가 자연스러운 인용처.
+        # §H (가설) 는 측정 결과지 모듈 매핑이 아니므로 의무 ✕.
+        - file: "06-tech-spec.md"
+          must_contain_pattern: "§F"
+          min_count: 1
+          fail_message: "tech-spec 이 §F (아키텍처 지도) 인용 ✕. 모듈 매핑은 §F 기반이어야 함."
+        - file: "06-tech-spec.md"
+          must_contain_pattern: "§G"
+          min_count: 1
+          fail_message: "tech-spec 이 §G (데이터 스키마) 인용 ✕. 시그널·Resource 매핑은 §G 기반이어야 함."
+        - file: "06-tech-spec.md"
+          must_contain_pattern: "§I"
+          min_count: 1
+          fail_message: "tech-spec 이 §I (인수 기준) 인용 ✕. 테스트 매트릭스는 §I 기반이어야 함."
         # 시점 문서가 *변경 이력* 을 복제했는지 검증 (06-changelog.md 단일 진실)
         - file: "06-art-bible.md"
           must_not_contain_pattern: "^## 부록 X|^## 변경 이력|^### 변경 이력"

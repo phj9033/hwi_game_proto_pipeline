@@ -135,6 +135,30 @@ if [[ -d "$SLUG_DIR" ]]; then
     SSOT_LOG=$(grep -E "^- 20[0-9]{2}-[0-9]{2}-[0-9]{2} v[0-9]" "$SLUG_DIR/06-integrated-spec.md" 2>/dev/null | wc -l | tr -d ' ')
     [[ $SSOT_LOG -eq 0 ]] && ok "SSOT 본문 변경이력 항목 없음 (분리됨)" || fail "SSOT 본문 변경이력 ${SSOT_LOG}건 - 06-changelog.md 로 분리 필요"
   fi
+
+  # 단계 3 content 게이트 (v0.2.1~) — 분기 축 "왜 이 변주" 필드 검증
+  for d in A B C; do
+    if [[ -f "$SLUG_DIR/02-draft-${d}.md" ]]; then
+      WHY=$(grep -E "왜 이 변주" "$SLUG_DIR/02-draft-${d}.md" 2>/dev/null | wc -l | tr -d ' ')
+      [[ $WHY -ge 1 ]] && ok "02-draft-${d}.md '왜 이 변주' 필드 있음" || fail "02-draft-${d}.md '왜 이 변주' 필드 누락"
+    fi
+  done
+
+  # 단계 7 깊이 게이트 (v0.2.1~) — 시점 문서가 SSOT 의 *적절한 섹션* 인용
+  if [[ -f "$SLUG_DIR/06-art-bible.md" ]]; then
+    AB_E=$(grep -E "§E" "$SLUG_DIR/06-art-bible.md" 2>/dev/null | wc -l | tr -d ' ')
+    AB_G1=$(grep -E "§G\\.1|§G[ .]" "$SLUG_DIR/06-art-bible.md" 2>/dev/null | wc -l | tr -d ' ')
+    [[ $AB_E -ge 1 ]] && ok "art-bible §E 인용 ${AB_E}회 (>=1)" || fail "art-bible §E 인용 없음"
+    [[ $AB_G1 -ge 1 ]] && ok "art-bible §G.1 인용 ${AB_G1}회 (>=1)" || fail "art-bible §G.1 인용 없음"
+  fi
+  if [[ -f "$SLUG_DIR/06-tech-spec.md" ]]; then
+    TS_F=$(grep -E "§F" "$SLUG_DIR/06-tech-spec.md" 2>/dev/null | wc -l | tr -d ' ')
+    TS_G=$(grep -E "§G" "$SLUG_DIR/06-tech-spec.md" 2>/dev/null | wc -l | tr -d ' ')
+    TS_I=$(grep -E "§I" "$SLUG_DIR/06-tech-spec.md" 2>/dev/null | wc -l | tr -d ' ')
+    [[ $TS_F -ge 1 ]] && ok "tech-spec §F 인용 ${TS_F}회 (>=1)" || fail "tech-spec §F 인용 없음"
+    [[ $TS_G -ge 1 ]] && ok "tech-spec §G 인용 ${TS_G}회 (>=1)" || fail "tech-spec §G 인용 없음"
+    [[ $TS_I -ge 1 ]] && ok "tech-spec §I 인용 ${TS_I}회 (>=1)" || fail "tech-spec §I 인용 없음"
+  fi
 else
   warn "workspace/sail-and-cast 없음 — 게이트 검증 스킵"
 fi
