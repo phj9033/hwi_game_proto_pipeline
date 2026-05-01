@@ -4,10 +4,32 @@
 
 pipeline:
   name: concept-to-prototype
-  version: 0.1
+  version: "0.2"
   workspace_root: ./workspace
   language: ko                   # 산출물 한국어 작성
   config_ref: config.yaml
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CHANGELOG (pipeline 자체 구조 변경 이력)
+# ─────────────────────────────────────────────────────────────────────────────
+# 산출물 변경이 아닌 *파이프라인 구조* 변경만 기록한다.
+# version bump 규칙:
+#   - 단계 추가/제거/output 변경      → minor bump (0.1 → 0.2)
+#   - state_schema 필드 변경            → minor bump
+#   - 게이트(completion_check) 강화     → patch (0.2 → 0.2.1)
+#   - 호환 ✕ 변경 (재실행 필요)         → major bump (0.x → 1.0)
+changelog:
+  - version: "0.2"
+    date: "2026-05-01"
+    changes:
+      - "단계 6 outputs 3 산출물 패밀리 (SSOT + art-bible + tech-spec) 정식화"
+      - "단계 7 게이트에 cross_reference_check 추가 (시점 문서 SSOT 인용 검증)"
+      - "state_schema.deprecated_fields 추가 (마이그레이션 메커니즘)"
+      - "pipeline.version 을 string 으로 (semver 대비)"
+  - version: "0.1"
+    date: "2026-04-28"
+    changes:
+      - "초기 7단계 정의 + state.yaml 영속성"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # state.yaml 스키마 정의
@@ -19,9 +41,9 @@ state_schema:
     project: string                  # 프로젝트 슬러그
     created: ISO 8601 datetime
     pipeline_version: string         # pipeline.yaml 의 version 과 매칭
-    current_step: integer            # 1~7
+    current_step: integer            # 1~7 (8 = 완료)
     completed_steps: array           # [{id, slug, completed_at, output_files}]
-    artifacts: object                # concept, drafts[], selected_branch, eval_scores, detailed_gdd, integrated_spec
+    artifacts: object                # concept, drafts[], selected_branch, eval_scores, detailed_gdd, integrated_spec, art_bible, tech_spec
     notes: array                     # 중요 이벤트 로그
 
   resume_fields:
@@ -34,15 +56,35 @@ state_schema:
     last_pause_at: ISO 8601 | null
     last_user_response_at: ISO 8601 | null
 
+  # ───────────────────────────────────────────────────────────────────────────
+  # 마이그레이션 메커니즘 (v0.2~)
+  # ───────────────────────────────────────────────────────────────────────────
+  # 스킬은 state.yaml 로드 시 pipeline_version 비교 + deprecated_fields 정리.
+  # 규약:
+  #   1. 기존 키는 *in-place 갱신*. 같은 키를 새 값으로 추가 작성 ✕ (중복 키 방지).
+  #   2. 신규 키만 append. 알 수 없는 기존 키는 보존(미래 호환).
+  #   3. state.yaml.pipeline_version != pipeline.yaml.version → 자동 마이그레이션 시도.
+  #      - deprecated_fields 의 모든 키 제거.
+  #      - 누락된 required_fields/resume_fields 기본값 추가.
+  #      - notes 에 "schema migration X.Y → Z.W" 1줄 기록.
+  #      - pipeline_version 갱신.
+  #   4. 마이그레이션 실패 시 .archive/state-pre-migration-<timestamp>.yaml 백업 후 사용자에게 보고.
+  deprecated_fields:                 # 제거 대상 (마이그레이션 시 정리)
+    - path: "artifacts.coordinates"  # v17 좌표 폐기 (sail-and-cast 이력)
+      since_version: "0.2"
+      reason: "v17 라운드에서 좌표 시스템 폐기"
+    # 향후 폐기되는 필드를 여기에 append. 제거 ✕ (기록 보존).
+
   example: |
     project: my-game
     created: 2026-04-28T16:00:00
-    pipeline_version: "0.1"
+    pipeline_version: "0.2"
     current_step: 5
     sub_progress:
       section: "시스템 인벤토리"
       last_section_completed: "코어 루프"
       step_5_section: 3
+      step_6_section: null
     completed_steps:
       - { id: 1, slug: concept, completed_at: "...", output_files: ["01-concept.md"] }
       - { id: 2, slug: draft-3-branches, completed_at: "...", output_files: ["02-draft-A.md","02-draft-B.md","02-draft-C.md"] }
@@ -55,6 +97,8 @@ state_schema:
       eval_scores: { A: 3.65, B: 3.45, C: 3.55 }
       detailed_gdd: null
       integrated_spec: null
+      art_bible: null
+      tech_spec: null
     last_pause_reason: "단계 5 - 시스템 인벤토리 섹션 응답 대기"
     last_pause_at: "2026-04-28T16:35:00"
     last_user_response_at: "2026-04-28T16:30:00"
@@ -233,6 +277,27 @@ steps:
             - "모듈_매핑"
             - "데이터_플로우"
             - "테스트_매트릭스"
+      # ─────────────────────────────────────────────────────────────────────
+      # cross_reference_check (v0.2~)
+      # SSOT 단일 진실 원칙 검증 — 시점 문서가 룰을 *복제* 했는지, *인용* 했는지.
+      # 인용 패턴이 N회 이상 등장해야 통과. (아래 패턴은 grep -c 로 검증)
+      # ─────────────────────────────────────────────────────────────────────
+      cross_reference_check:
+        - file: "06-art-bible.md"
+          must_contain_pattern: "06-integrated-spec\\.md"   # SSOT 인용 링크
+          min_count: 3
+          fail_message: "art-bible 이 SSOT 인용 ✕. §E 룰을 복제했을 가능성. SSOT(06-integrated-spec.md) 의 §E·§G.1 을 인용 링크 형태로 참조하도록 재작성 필요."
+        - file: "06-tech-spec.md"
+          must_contain_pattern: "06-integrated-spec\\.md"
+          min_count: 3
+          fail_message: "tech-spec 이 SSOT 인용 ✕. §F·§G·§H 룰을 복제했을 가능성. SSOT 인용 링크 형태로 재작성 필요."
+        # 시점 문서가 *부록 X 변경이력* 을 복제했는지 검증 (SSOT 에만 박혀야 함)
+        - file: "06-art-bible.md"
+          must_not_contain_pattern: "^부록 X|^## 부록 X|^### 변경 이력"
+          fail_message: "art-bible 에 부록 X(변경이력)이 복제됨. SSOT 에만 박혀야 함."
+        - file: "06-tech-spec.md"
+          must_not_contain_pattern: "^부록 X|^## 부록 X|^### 변경 이력"
+          fail_message: "tech-spec 에 부록 X(변경이력)이 복제됨. SSOT 에만 박혀야 함."
     on_complete:
       message: |
         프로토타입 준비 완료. 다음 단계는 별도 워크플로우로 관리.

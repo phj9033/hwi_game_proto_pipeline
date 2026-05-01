@@ -22,6 +22,7 @@ description: 게임 컨셉부터 프로토타입 준비까지 7단계 데이터 
 1. `~/concept-pipeline/workspace/.active` 존재 확인
 2. **존재 (재개 후보)**:
    - 그 slug 의 `state.yaml` 읽기
+   - **스키마 마이그레이션** (§7 의 마이그레이션 절차) — `state.pipeline_version` 이 현재 `pipeline.version` 과 다르면 백업 후 자동 정리. 알리지 않고 흐른다(notes 에만 기록).
    - 사용자에게 다음 보고:
      ```
      활성 프로젝트: <slug>
@@ -162,12 +163,19 @@ state.yaml 즉시 저장
 
 ### 5.4 mode: gate (단계 3, 7)
 
-1. `completion_check` 의 모든 조건 검증
+1. `completion_check` 의 모든 조건 검증 (순서대로):
+   - **`all_files_exist`** — 각 파일에 대해 `test -f workspace/<slug>/<file>`
+   - **`sections_present_in`** — 각 파일에 `required_sections` 의 모든 항목이 헤더(`#`/`##`/`###`)로 등장하는지 grep
+   - **`cross_reference_check`** (v0.2~, 단계 7) — 각 항목별:
+     - `must_contain_pattern` 있으면: `grep -E -c "<pattern>" <file>` 결과가 `min_count` 이상인지
+     - `must_not_contain_pattern` 있으면: `grep -E -c "<pattern>" <file>` 결과가 0 인지
+     - 실패 시 `fail_message` 를 사용자에게 1줄 보고
 2. 통과 → state 갱신 + 다음 단계로 즉시 자동 진입 (질문 없음)
-3. 실패 → 무엇이 부족한지 1줄로 보고 + 멈춤
+3. 실패 → 어떤 항목이 어느 이유로 실패했는지 1줄로 보고 + 멈춤
    ```
-   state.last_pause_reason = "단계 N 게이트 실패: <이유>"
+   state.last_pause_reason = "단계 N 게이트 실패: <fail_message 또는 누락 파일·섹션>"
    ```
+   - `cross_reference_check` 실패는 *복구 가능* — 사용자에게 "재작성 후 /cp-redo 6" 안내
 
 ## 6. 사용자 응답 후 재개 처리
 
@@ -200,6 +208,24 @@ state.yaml 즉시 저장
     - "2026-04-28T16:35: 단계 4 평가 완료, 분기 A 선택"
     - "2026-04-28T16:50: 단계 5 진입, 약점 축 A·B 식별"
   ```
+
+**키 갱신 규약 (v0.2~)**:
+- 기존 키는 *in-place 갱신*. 같은 키를 새 값으로 다시 작성 ✕ (YAML 중복 키 방지).
+  - 잘못된 예: `step_5_section: 9` 다음 줄에 `step_5_section: null` 추가.
+  - 올바른 예: 기존 줄을 직접 `step_5_section: null` 로 바꿈.
+- 신규 키만 append.
+- 알 수 없는 기존 키(다른 도구가 박은 것)는 *보존* — 임의 제거 ✕.
+
+**스키마 마이그레이션 (state.yaml 로드 직후 1회)**:
+1. `state.pipeline_version` vs `pipeline.yaml.pipeline.version` 비교.
+2. 일치하면 스킵.
+3. 다르면:
+   a. 백업: `workspace/<slug>/.archive/state-pre-migration-<ISO 8601>.yaml`
+   b. `pipeline.yaml.state_schema.deprecated_fields` 의 모든 `path` 제거 (점 표기 — `artifacts.coordinates` 등).
+   c. `required_fields` / `resume_fields` 중 누락된 키를 기본값(null/[]/{})으로 추가.
+   d. `state.pipeline_version` 을 현재 `pipeline.version` 으로 갱신.
+   e. `notes` 에 `"<ISO 8601>: schema migration <old> → <new>"` 1줄 append.
+4. 마이그레이션 중 예외 → 백업은 유지, 사용자에게 보고 후 멈춤.
 
 ## 8. RAG 호출 규약
 
