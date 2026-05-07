@@ -1,12 +1,15 @@
 # RAG 추가 권장 문서 카탈로그
 
-> 본 파이프라인이 hwicortex RAG로 회수해서 더 정확한 출력을 내기 위해, 신규 등록하면 좋을 컬렉션과 자료 목록.
-> 
+> 추후 RAG 시스템 연결 시 추가 등록하면 좋을 컬렉션·자료 목록.
+>
+> **참고**: 실제 등록 명령은 RAG 시스템 연결 시 그 시스템 문서 참조.
+>
 > **현재 상태**:
-> - ✅ `gdd-evaluation` 등록됨 (5-Axis 14개 이론)
-> - 🟡 `gdd-wisdom` 작성됨 (`rag-data/gdd-wisdom/`), 등록 대기
-> - 🟡 `architecture-patterns` 작성됨 (`rag-data/architecture-patterns/`), 등록 대기
-> - ⏸ `indie-postmortems`, `market-snapshots` 미작성 (선택)
+> - ✅ `gdd-evaluation` 자료 작성됨 (5-Axis 14개 이론, `rag-data/gdd-evaluation/`)
+> - ✅ `gdd-wisdom` 자료 작성됨 (`rag-data/gdd-wisdom/`)
+> - ✅ `architecture-patterns` 자료 작성됨 (`rag-data/architecture-patterns/`)
+> - ⏸ `indie-postmortems`, `market-snapshots` 자료 미작성 (선택)
+> - ⏸ RAG 시스템 미연결 — 추후 연결 시 일괄 적재 예정
 
 ---
 
@@ -14,16 +17,16 @@
 
 | 우선순위 | 컬렉션 | 영향받는 단계 | 상태 |
 |----------|--------|--------------|------|
-| 🔴 P0 | `gdd-wisdom` | 2, 4, 5, 6 | ✅ 작성 완료 → 등록만 하면 됨 |
-| 🔴 P0 | `architecture-patterns` | 4, 5, 6 | ✅ 작성 완료 → 등록만 하면 됨 |
+| 🔴 P0 | `gdd-wisdom` | 2, 4, 5, 6 | ✅ 자료 작성 완료 (RAG 연결 대기) |
+| 🔴 P0 | `architecture-patterns` | 4, 5, 6 | ✅ 자료 작성 완료 (RAG 연결 대기) |
 | 🟡 P1 | `indie-postmortems` | 4 (Axis E) | ⏸ 외부 자료 수집 필요 |
 | 🟡 P1 | `market-snapshots` | 4 (Axis E) | ⏸ 외부 자료 수집 필요 |
 
 ---
 
-## P0 — 즉시 등록 가능 (자료 작성 완료)
+## P0 — 자료 작성 완료, RAG 연결 대기
 
-### 1. `gdd-wisdom` — GDD 메타 원칙·표준 ★ 작성 완료
+### 1. `gdd-wisdom` — GDD 메타 원칙·표준 ★ 자료 작성 완료
 
 **위치**: `~/concept-pipeline/rag-data/gdd-wisdom/`
 
@@ -37,23 +40,9 @@
 
 **용도**: 단계 2 (분기 초안 시 표준 형식), 단계 4 (평가 시 안티패턴 차단), 단계 5·6 (작성 시 표준 적용).
 
-**등록 명령**:
-```bash
-hwicortex collection add ~/concept-pipeline/rag-data/gdd-wisdom \
-  --name gdd-wisdom \
-  --pattern "**/*.md"
-
-hwicortex context add "qmd://gdd-wisdom/" \
-  "GDD 메타 원칙·표준. 8섹션 표준, 기둥/안티기둥, 레이어링, 양방향 의존성, Game Feel, 안티패턴."
-
-hwicortex update && hwicortex embed
-```
-
-등록 후 `~/concept-pipeline/config.yaml` 의 `gdd-wisdom.status` → `ready`.
-
 ---
 
-### 2. `architecture-patterns` — 아키텍처 표준 ★ 작성 완료
+### 2. `architecture-patterns` — 아키텍처 표준 ★ 자료 작성 완료
 
 **위치**: `~/concept-pipeline/rag-data/architecture-patterns/`
 
@@ -65,20 +54,6 @@ hwicortex update && hwicortex embed
 - 시스템 인터페이스 계약 패턴
 
 **용도**: 단계 4 (Axis E 평가), 단계 5 (시스템 인터페이스 계약), 단계 6 (통합 명세서의 F·G·I 섹션).
-
-**등록 명령**:
-```bash
-hwicortex collection add ~/concept-pipeline/rag-data/architecture-patterns \
-  --name architecture-patterns \
-  --pattern "**/*.md"
-
-hwicortex context add "qmd://architecture-patterns/" \
-  "아키텍처 표준. ADR, Control Manifest, TR-ID, 테스트 증거 매트릭스, 시스템 인터페이스 계약."
-
-hwicortex update && hwicortex embed
-```
-
-등록 후 `config.yaml` 의 `architecture-patterns.status` → `ready`.
 
 ---
 
@@ -142,51 +117,10 @@ indie-postmortems/
 
 ---
 
-## 등록 후 체크리스트
+## RAG 연결 시 (추후)
 
-새 컬렉션 등록 시 확인:
-
-```bash
-# 1. 등록
-hwicortex collection add <path> --name <name> --pattern "**/*.md"
-
-# 2. 컨텍스트 추가 (검색 정확도 향상)
-hwicortex context add "qmd://<name>/" "<설명>"
-
-# 3. 인덱싱 + 임베딩
-hwicortex update && hwicortex embed
-
-# 4. 상태 확인
-hwicortex status
-hwicortex ls <name>
-
-# 5. 테스트 쿼리
-hwicortex query "<테스트 검색어>" -c <name> --json -n 3
-```
-
-이후 `~/concept-pipeline/config.yaml` 의 해당 컬렉션 `status: pending` → `status: ready` 로 수정.
-
----
-
-## 빠른 시작 — P0 두 컬렉션 한번에 등록
-
-```bash
-cd ~/concept-pipeline
-
-hwicortex collection add ./rag-data/gdd-wisdom --name gdd-wisdom --pattern "**/*.md"
-hwicortex context add "qmd://gdd-wisdom/" \
-  "GDD 메타 원칙·표준. 8섹션 표준, 기둥/안티기둥, 레이어링, 양방향 의존성, Game Feel, 안티패턴."
-
-hwicortex collection add ./rag-data/architecture-patterns --name architecture-patterns --pattern "**/*.md"
-hwicortex context add "qmd://architecture-patterns/" \
-  "아키텍처 표준. ADR, Control Manifest, TR-ID, 테스트 증거 매트릭스, 시스템 인터페이스 계약."
-
-hwicortex update && hwicortex embed
-hwicortex query "8 section GDD standard" -c gdd-wisdom -n 3
-hwicortex query "ADR template" -c architecture-patterns -n 3
-```
-
-테스트 쿼리가 결과 반환하면 `config.yaml` 의 `status` 둘 다 `ready` 로 변경하고 첫 파이프라인 사이클 시작.
+추후 RAG 시스템 연결 시 본 디렉토리(`rag-data/`)의 컬렉션들을 일괄 적재한다.
+구체 적재 절차는 그 시점의 RAG 시스템 문서 참조.
 
 ---
 

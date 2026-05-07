@@ -120,26 +120,7 @@ File-backed state, incremental write, proactive compaction, subagent delegation,
 3. 검증 가능성 → `04-test-evidence-matrix.md` 의 인수 기준 매핑
 
 ### RAG 회수 시
-hwicortex 쿼리 예시:
-```bash
-# ADR 양식 회수
-hwicortex query "ADR architecture decision record context consequences" -c architecture-patterns -n 3
-
-# 시스템 인터페이스 패턴 회수
-hwicortex query "system interface contract resource signal dependency injection" -c architecture-patterns -n 3
-
-# TR-ID 회수
-hwicortex query "TR-ID requirement stable identifier registry traceability" -c architecture-patterns -n 3
-
-# 프로토타입 표준 회수
-hwicortex query "prototype throwaway hypothesis README relaxed standards" -c architecture-patterns -n 3
-
-# 추적성 매트릭스 회수
-hwicortex query "traceability matrix coverage gap untraced stale" -c architecture-patterns -n 3
-
-# 테스트 증거 매트릭스 회수
-hwicortex query "test evidence story type logic integration visual UI" -c architecture-patterns -n 3
-```
+각 자료를 어떤 RAG 쿼리로 끌어올지에 대한 예시는 추후 RAG 연결 후 별도 정리. (현재 RAG 미연결)
 
 ## 표준 frontmatter
 
@@ -158,17 +139,6 @@ last_updated: 2026-04-28
 ---
 ```
 
-## 등록 명령
+## RAG 연결 (추후)
 
-```bash
-hwicortex collection add ~/concept-pipeline/rag-data/architecture-patterns \
-  --name architecture-patterns \
-  --pattern "**/*.md"
-
-hwicortex context add "qmd://architecture-patterns/" \
-  "아키텍처 표준 컬렉션. ADR, Control Manifest, TR-ID, 테스트 증거 매트릭스, 시스템 인터페이스 계약 패턴."
-
-hwicortex update && hwicortex embed
-```
-
-이후 `~/concept-pipeline/config.yaml` 에 `architecture-patterns.status: pending` → `ready` 변경.
+추후 RAG 시스템 연결 시 본 컬렉션을 그대로 적재. 적재 절차는 그 시점의 RAG 시스템 문서 참조.

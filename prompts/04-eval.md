@@ -11,23 +11,9 @@
 
 1. `01-concept.md`, `02-draft-A.md`, `02-draft-B.md`, `02-draft-C.md` 모두 읽기
 2. `config.yaml` 의 `rubric` 섹션 읽기 — 가중치, 척도 정의
-3. **per_axis RAG 회수** — config.yaml.rubric.axes 5개 각각 다음 명령 실행:
-   ```bash
-   hwicortex query "axis A evaluation criteria scoring rubric structure" -c gdd-evaluation --json --full -n 3
-   hwicortex query "axis B motivation SDT Bartle Octalysis" -c gdd-evaluation --json --full -n 3
-   hwicortex query "axis C cognitive load flow FTUE" -c gdd-evaluation --json --full -n 3
-   hwicortex query "axis D MDA RMDA tetrad coherence" -c gdd-evaluation --json --full -n 3
-   hwicortex query "axis E vertical slice scope viability publisher" -c gdd-evaluation --json --full -n 3
-   ```
-   각 축당 3개 이론 문서 본문 회수. 회수 결과를 채점 근거 컨텍스트로 사용.
-
-   **gdd-evaluation 컬렉션이 없으면 단계 중단** (config.yaml 에서 required: true).
-
-4. (선택) `indie-postmortems`, `market-snapshots` 컬렉션이 있으면 Axis E 보강 회수:
-   ```bash
-   hwicortex query "<concept_keywords> scope failure indie" -c indie-postmortems --json -n 3
-   hwicortex query "<concept_keywords> market data steam" -c market-snapshots --json -n 3
-   ```
+3. 📚 RAG 사용 단계 — 현재 미연결, 본 단계는 LLM 자체 지식으로 진행 (rag_queries 인터페이스는 pipeline.yaml 에 보존)
+   - 5축 채점은 LLM 자체 지식의 학술 이론 (SDT, Bartle, Octalysis, Flow, CLT, Laws of UX, FTUE, MDA/RMDA, Tetrad, VS scope, F2P KPI, Loss Aversion, Variable Ratio, Publisher Greenlight) 으로 진행한다.
+   - 추후 RAG 연결 시 `rag-data/gdd-evaluation/` 의 14개 이론 문서를 per_axis 로 회수하여 인용 근거 강화 예정.
 
 ## 채점 절차
 

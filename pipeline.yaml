@@ -4,7 +4,7 @@
 
 pipeline:
   name: concept-to-prototype
-  version: "0.3"
+  version: "0.4"
   workspace_root: ./workspace
   language: ko                   # 산출물 한국어 작성
   config_ref: config.yaml
@@ -27,6 +27,12 @@ pipeline:
 #   - 게이트(completion_check) 강화     → patch (0.2 → 0.2.1)
 #   - 호환 ✕ 변경 (재실행 필요)         → major bump (0.x → 1.0)
 changelog:
+  - version: "0.4"
+    date: "2026-05-07"
+    changes:
+      - "RAG 디커플링: 외부 RAG CLI 직접 의존 제거. RAG 사용 단계는 알림만 표시하고 LLM 자체 지식으로 진행."
+      - "config.yaml: rag.collections.*.status 필드 제거 (외부 RAG 의존), env.RAG_bin 설정 제거."
+      - "SKILL.md §8 단순화: §8.1 status 자동 동기화 섹션 삭제. rag_queries 인터페이스는 보존 — 추후 RAG 시스템 연결 예정."
   - version: "0.3"
     date: "2026-05-06"
     changes:

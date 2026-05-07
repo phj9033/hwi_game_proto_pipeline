@@ -12,17 +12,7 @@
 1. `01-concept.md` 읽기
 2. `02-draft-{selected}.md` 읽기 (state.yaml.artifacts.selected_branch 기준)
 3. `04-eval-report.md` 읽기 — 특히 선택 드래프트의 약점 축 식별
-4. RAG 쿼리 (있는 컬렉션만):
-   ```bash
-   # 약점 축 보강용
-   hwicortex query "<약점 축 키워드>" -c gdd-evaluation --json -n 3
-
-   # 모범 GDD 형식 참조
-   hwicortex query "<concept keywords> system design" -c gdd-references --json -n 3
-
-   # 개인 취향 반영
-   hwicortex query "<concept keywords>" -c personal-archive --json -n 3
-   ```
+4. 📚 RAG 사용 단계 — 현재 미연결, 본 단계는 LLM 자체 지식으로 진행 (rag_queries 인터페이스는 pipeline.yaml 에 보존)
 
 ## 확장 전략
 

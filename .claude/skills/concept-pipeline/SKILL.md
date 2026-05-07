@@ -140,17 +140,12 @@ state.yaml 즉시 저장
 
 ### 5.3 mode: ai_evaluation (단계 4)
 
-1. `gdd-evaluation` 컬렉션 등록 확인 (`required: true`)
-   - 미등록 → 단계 중단, 사용자에게 등록 요청
-2. **per_axis RAG 회수** — 5개 축 각각:
-   ```bash
-   hwicortex query "axis A evaluation criteria scoring rubric structure" -c gdd-evaluation --json --full -n 3
-   hwicortex query "axis B motivation SDT Bartle Octalysis" -c gdd-evaluation --json --full -n 3
-   hwicortex query "axis C cognitive load flow FTUE laws of UX" -c gdd-evaluation --json --full -n 3
-   hwicortex query "axis D MDA RMDA tetrad coherence" -c gdd-evaluation --json --full -n 3
-   hwicortex query "axis E vertical slice scope viability publisher KPI" -c gdd-evaluation --json --full -n 3
+1. **RAG 사용 단계 알림** — 1회 출력:
    ```
-3. (선택) `indie-postmortems`, `market-snapshots` 있으면 Axis E 보강
+   📚 RAG 사용 단계 — 현재 미연결, LLM 자체 지식으로 5축 채점 진행 (gdd-evaluation 컬렉션 정의는 pipeline.yaml.steps[3].rag_queries 에 인터페이스 보존, 추후 연결 시 활용).
+   ```
+2. LLM 자체 지식으로 5축 채점 진행 (gdd-evaluation 컬렉션 정의는 인터페이스로 보존됨)
+3. (참고) `indie-postmortems`, `market-snapshots` 정의도 보존됨 — 추후 RAG 연결 시 Axis E 보강용으로 활용 예정
 4. 드래프트 3개 × 5축 = 15개 점수 산출 (각 점수에 RAG 인용 첨부)
 5. 종합 점수 = Σ(축점수 × 가중치). 컷오프 3.5 통과 여부 표시
 6. 권장 선택 + 근거 작성
@@ -235,34 +230,15 @@ state.yaml 즉시 저장
    e. `notes` 에 `"<ISO 8601>: schema migration <old> → <new>"` 1줄 append.
 4. 마이그레이션 중 예외 → 백업은 유지, 사용자에게 보고 후 멈춤.
 
-## 8. RAG 호출 규약
+## 8. RAG 호출 규약 (미연결)
 
-각 RAG 쿼리 실행 전 컬렉션 존재 확인:
-```bash
-hwicortex collection list 2>&1 | grep -q "<collection-name>"
+현재 RAG 시스템 미연결. 각 단계의 `pipeline.yaml.steps[N].rag_queries` 는 인터페이스로 보존되어 있으나, 단계 진입 시:
+
+```
+📚 RAG 사용 단계 — 현재 미연결, LLM 자체 지식으로 진행
 ```
 
-- 존재 → `hwicortex query "<질의>" -c <컬렉션> --json -n <N>` 실행 후 결과를 LLM 컨텍스트로
-- 미존재:
-  - `optional: true` → "RAG skipped: <컬렉션> (LLM 자체 지식 사용)" 1줄 알리고 진행
-  - `required: true` → 단계 중단, 사용자에게 컬렉션 등록 요청 후 멈춤
-
-### 8.1 status 자동 동기화 (v0.2~)
-
-`config.yaml` 의 `rag.collections.<name>.status` (`ready`/`pending`/`broken`) 가 *실제* 등록 상태와 어긋나면 사용자에게 1회 안내:
-
-**부팅 시 1회** (활성 프로젝트 부팅 직후, §0 의 마이그레이션 다음):
-```bash
-hwicortex collection list 2>&1 > /tmp/cp-rag-list.txt
-# 파싱 실패 시(hwicortex 미설치 등) — 모든 컬렉션 status='pending' 으로 간주, 동기화 스킵
-```
-1. `config.yaml.rag.collections` 의 각 컬렉션에 대해:
-   - 실제 등록 ✓ but status != `ready`  → "RAG: '<name>' 등록되었으나 config.yaml status 미갱신 (현재: <status>). 'ready' 로 바꾸면 본 단계부터 사용." 안내
-   - 실제 등록 ✕ but status == `ready` → "RAG: '<name>' status 'ready' 인데 등록 ✕. 'pending' 으로 갱신 권장." 안내
-2. 사용자가 *config.yaml 갱신* 을 명시 위임하면 직접 수정. 그렇지 않으면 안내만 하고 흐름 계속.
-3. 한 세션 내 중복 안내 ✕ — 부팅 시 1회로 충분.
-
-이 동기화는 *진단* 이지 *강제* ✕. RAG 미등록은 여전히 `optional: true` 로 흐른다.
+알림만 1회 출력하고 LLM 자체 지식으로 단계 본문을 진행한다. 추후 RAG 시스템 연결 시 본 섹션을 호출 규약으로 채움.
 
 ## 9. 완료 처리
 

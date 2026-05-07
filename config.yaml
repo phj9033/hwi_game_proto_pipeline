@@ -58,38 +58,33 @@ rubric:
 # ─────────────────────────────────────────────────────────────────────────────
 # RAG 컬렉션 매핑
 # ─────────────────────────────────────────────────────────────────────────────
-# status:
-#   ready     - hwicortex에 등록되어 즉시 사용 가능
-#   pending   - 미등록. optional: true 인 단계에서는 자동 스킵
-#   broken    - 등록되었으나 인덱스 문제 있음 (수동 점검 필요)
+# RAG 시스템 미연결 (나중에 연결 예정) — 본 카탈로그는 메타데이터로 보존.
+# 단계 진입 시 알림만 표시되고 LLM 자체 지식으로 진행.
+# 추후 RAG 연결 시 본 collections 정의 + pipeline.yaml.steps[*].rag_queries 그대로 활용.
 rag:
   default_options: "--json -n 5"
-  fallback_message: "RAG 컬렉션 '{collection}' 미등록. LLM 자체 지식으로 대체."
+  fallback_message: "RAG 사용 단계 — 현재 미연결, LLM 자체 지식으로 진행."
 
   collections:
     gdd-evaluation:
-      status: ready
       description: "5-Axis GDD 평가 이론 14종 (SDT, Bartle, Octalysis, Flow, CLT, Laws of UX, FTUE, MDA/RMDA, Tetrad, VS scope, F2P KPI, Loss Aversion, Variable Ratio, Publisher Greenlight)"
       local_copy_path: "{pipeline_root}/rag-data/gdd-evaluation"
       used_in_steps: [4, 5, 6]
       docs_count: 14
 
     gdd-wisdom:
-      status: pending
       description: "GDD 메타 원칙·표준 컬렉션 (CCGS distilled). 8섹션, 기둥/안티기둥, 레이어링, 양방향 의존성, Game Feel, 안티패턴, 브레인스토밍, Cross-GDD, 고위험 시스템."
       suggested_path: "{pipeline_root}/rag-data/gdd-wisdom"
       used_in_steps: [2, 4, 5, 6]
       docs_count: 9
 
     architecture-patterns:
-      status: pending
       description: "아키텍처 표준 컬렉션 (CCGS distilled). ADR, Control Manifest, TR-ID, 테스트 증거 매트릭스, 시스템 인터페이스 계약."
       suggested_path: "{pipeline_root}/rag-data/architecture-patterns"
       used_in_steps: [4, 5, 6]
       docs_count: 5
 
     indie-postmortems:
-      status: pending
       description: "인디 게임 포스트모템 — 차원 E(스코프·실현·시장성) 평가 강화 (선택)"
       suggested_sources:
         - "GDC Vault 공개 포스트모템"
@@ -98,7 +93,6 @@ rag:
       used_in_steps: [4]
 
     market-snapshots:
-      status: pending
       description: "장르별 시장 데이터 — 차원 E(시장성) 평가 (선택)"
       suggested_sources:
         - "gamalytic"
@@ -131,6 +125,5 @@ output:
 # 환경
 # ─────────────────────────────────────────────────────────────────────────────
 env:
-  hwicortex_bin: hwicortex          # PATH 에 있다고 가정
   workspace_root: "{pipeline_root}/workspace"
   state_filename: state.yaml

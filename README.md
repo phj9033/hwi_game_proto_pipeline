@@ -11,7 +11,7 @@
 - **로직은 데이터, 실행은 AI**: 단계 정의는 `pipeline.yaml`, 튜닝값은 `config.yaml`. Claude 가 이 데이터를 읽고 단계를 실행한다.
 - **자동 흐름 + 결정 지점 멈춤**: 스킬이 자동으로 진행하다 사용자 응답이 필요한 곳에서만 정지. 응답 받으면 자동 재개.
 - **세션 끊겨도 재개**: 진행 상태가 `workspace/<slug>/state.yaml` 에 영구 저장. 새 세션에서도 이어가기 가능.
-- **RAG는 선택적**: hwicortex 컬렉션이 없어도 즉시 시작 가능. 컬렉션 추가 시 자동 활성화.
+- **RAG 미연결**: 현재 RAG 시스템 미연결 — LLM 자체 지식으로 진행. 추후 RAG 연결 예정.
 - **자기완결**: `~/concept-pipeline/` 한 디렉토리만으로 동작. 외부 프로젝트 의존 없음.
 
 ## 7단계 개요
@@ -40,7 +40,6 @@
 
 ### 사전 요구사항
 - [Claude Code](https://claude.com/claude-code) CLI 설치
-- (선택) [hwicortex](https://github.com/) — RAG 컬렉션 사용 시. 없어도 즉시 시작 가능 (LLM 자체 지식으로 대체).
 
 ### 클론 & 첫 실행
 
@@ -189,19 +188,15 @@ SessionStart 훅:
 
 > `workspace/<slug>/`, `workspace/.active` 는 `.gitignore` 처리됨. 각 사용자가 자기 슬러그로 시작.
 
-## RAG 통합 (hwicortex)
+## RAG 통합 (미연결)
 
-3개 컬렉션이 `rag-data/` 에 자기완결로 포함됨. hwicortex 등록은 선택.
+3 개 컬렉션 자료가 `rag-data/` 에 자기완결로 포함됨. **현재 RAG 시스템 미연결** — 단계 진입 시 알림만 표시되고 LLM 자체 지식으로 진행됨. 추후 RAG 연결 시 `pipeline.yaml.steps[*].rag_queries` 정의 그대로 활용 가능.
 
 | 컬렉션 | 역할 | 문서 수 | 사용 단계 |
 |--------|------|---------|-----------|
 | `gdd-evaluation` | 학술 이론 (5-Axis) | 14 + index | 4, 5, 6 |
 | `gdd-wisdom` | GDD 메타 표준 | 17 + index | 2, 4, 5, 6 |
 | `architecture-patterns` | 아키텍처 표준 | 10 + index | 4, 5, 6 |
-
-- 등록 명령: `rag-data/README.md` 참고
-- 등록 후 `config.yaml` 의 `status: pending` → `ready` 로 변경
-- 미등록 컬렉션은 자동으로 LLM 자체 지식으로 대체 (즉시 시작 가능)
 
 ## 다음 단계
 

@@ -175,29 +175,7 @@ GDD 검토할 때:
 4. `08-cross-gdd-consistency.md` 의 9 카테고리 cross-review
 
 ### RAG 회수 시
-hwicortex 쿼리 예시:
-```bash
-# 8섹션 표준 회수
-hwicortex query "8 section GDD overview fantasy rules formulas" -c gdd-wisdom -n 3
-
-# 안티패턴 회수
-hwicortex query "GDD antipattern vague language TBD" -c gdd-wisdom -n 3
-
-# 레이어링 회수
-hwicortex query "system layering foundation core feature presentation" -c gdd-wisdom -n 3
-
-# Game Feel 회수
-hwicortex query "game feel input responsiveness ms frames hit pause" -c gdd-wisdom -n 3
-
-# 브레인스토밍 회수
-hwicortex query "brainstorm 10 seeds MDA motivation Bartle Octalysis" -c gdd-wisdom -n 3
-
-# Cross-GDD 일관성 회수
-hwicortex query "cross GDD consistency rule contradiction stale ownership conflict" -c gdd-wisdom -n 3
-
-# 고위험 시스템 회수
-hwicortex query "high risk system dependency density novelty complexity" -c gdd-wisdom -n 3
-```
+각 자료를 어떤 RAG 쿼리로 끌어올지에 대한 예시는 추후 RAG 연결 후 별도 정리. (현재 RAG 미연결)
 
 ## 표준 frontmatter
 
@@ -216,17 +194,6 @@ last_updated: 2026-04-28
 ---
 ```
 
-## 등록 명령
+## RAG 연결 (추후)
 
-```bash
-hwicortex collection add ~/concept-pipeline/rag-data/gdd-wisdom \
-  --name gdd-wisdom \
-  --pattern "**/*.md"
-
-hwicortex context add "qmd://gdd-wisdom/" \
-  "GDD 메타 원칙·표준 컬렉션. 8섹션 표준, 기둥/안티기둥, 레이어링, 양방향 의존성, Game Feel, 안티패턴."
-
-hwicortex update && hwicortex embed
-```
-
-이후 `~/concept-pipeline/config.yaml` 의 `gdd-wisdom.status: pending` → `ready` 변경.
+추후 RAG 시스템 연결 시 본 컬렉션을 그대로 적재. 적재 절차는 그 시점의 RAG 시스템 문서 참조.

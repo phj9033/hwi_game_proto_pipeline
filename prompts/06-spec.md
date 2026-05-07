@@ -28,11 +28,7 @@
 
 1. `05-detailed-gdd.md` 읽기
 2. `01-concept.md`, `04-eval-report.md` 보조 참조
-3. RAG 쿼리 (선택):
-   ```bash
-   hwicortex query "vertical slice scope architecture system" -c gdd-evaluation --json -n 3
-   hwicortex query "<concept keywords> data schema" -c gdd-references --json -n 3
-   ```
+3. 📚 RAG 사용 단계 — 현재 미연결, 본 단계는 LLM 자체 지식으로 진행 (rag_queries 인터페이스는 pipeline.yaml 에 보존)
 
 ## 작성 원칙
 - **9개 섹션 (A~I) 모두 포함**: 빠진 섹션 없이 완성

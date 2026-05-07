@@ -13,12 +13,7 @@
 
 1. `01-concept.md` 전체 읽기
 2. 컨셉에서 keywords 추출 (장르 후보, 핵심 동사, 톤, 타겟 등)
-3. RAG 쿼리 (있는 컬렉션만):
-   ```bash
-   hwicortex query "<keywords> mechanic alternatives genre branch" -c genre-mechanic-lexicon --json -n 5
-   hwicortex query "<keywords>" -c gdd-references --json -n 3
-   ```
-   미등록 컬렉션은 스킵하고 LLM 자체 지식 사용.
+3. 📚 RAG 사용 단계 — 현재 미연결, 본 단계는 LLM 자체 지식으로 진행 (rag_queries 인터페이스는 pipeline.yaml 에 보존)
 
 ## 분기 축 결정
 

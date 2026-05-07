@@ -30,10 +30,16 @@ echo "=== prototype-build-loop smoke test ==="
 echo "ROOT: $PIPELINE_ROOT"
 echo ""
 
-# ─── 1. pipeline.yaml v0.3 ───
-echo "[1] pipeline.yaml v0.3 schema"
+# ─── 1. pipeline.yaml v0.3+ ───
+echo "[1] pipeline.yaml v0.3+ schema"
 VERSION=$(python3 -c "import yaml; d=yaml.safe_load(open('pipeline.yaml')); print(d['pipeline']['version'])")
-[[ "$VERSION" == "0.3" ]] && ok "pipeline.version=0.3" || fail "pipeline.version=$VERSION (expected 0.3)"
+# 본 테스트는 v0.3 에서 도입된 schema 가 살아있는지 검증. 후속 버전 (0.4+) 도 통과해야 함.
+VERSION_OK=$(python3 -c "
+v = '$VERSION'.split('.')
+ok = (int(v[0]), int(v[1])) >= (0, 3)
+print('OK' if ok else 'FAIL')
+")
+[[ "$VERSION_OK" == "OK" ]] && ok "pipeline.version=$VERSION (>=0.3)" || fail "pipeline.version=$VERSION (expected >=0.3)"
 
 ENGINE_FIELD=$(python3 -c "
 import yaml

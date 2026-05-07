@@ -1,6 +1,6 @@
 # rag-data 유즈케이스 — 기획자 1인 Q&A 도구
 
-> hwicortex 에 등록된 3 컬렉션(`gdd-evaluation` / `gdd-wisdom` / `architecture-patterns`) 을 **단일 기획자의 일상 GDD 작업 보조** 로 어떻게 쓰는지 정리.
+> 3 컬렉션(`gdd-evaluation` / `gdd-wisdom` / `architecture-patterns`) 을 **단일 기획자의 일상 GDD 작업 보조** 로 어떻게 쓰는지 정리. (RAG 시스템 미연결 — 추후 연결 예정)
 > 본 디렉토리 README.md 가 *컬렉션이 무엇인지* 라면, 본 문서는 *그것으로 무엇을 묻는지*.
 
 ## 사용 의도
@@ -125,14 +125,8 @@
 
 ### 1) 채팅 기본 retrieval (수정·문의 1~7 커버)
 
-`hwicortex` 등록 후, Claude Code 의 컨텍스트에 3 컬렉션 자동 retrieval 박기:
-
-```yaml
-# 예시: 프로젝트 CLAUDE.md 또는 ~/.claude/CLAUDE.md 에
-# qmd:// URI 로 항상 후보군에 들어가도록
-```
-
-(구체 hwicortex MCP 셋업은 `README.md` 참조)
+추후 RAG 시스템 연결 시 Claude Code 컨텍스트에 3 컬렉션 자동 retrieval 박을 예정.
+(현재는 미연결 — LLM 자체 지식으로 답변)
 
 ### 2) `/gdd-review` 슬래시 커맨드 (평가 8~11) — 아직 미구현, 권장 셋업
 
