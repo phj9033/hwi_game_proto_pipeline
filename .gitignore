@@ -16,3 +16,7 @@ workspace/*
 
 # OS / 시스템
 Thumbs.db
+
+# prototype-build-loop — build trees have their own .git, exclude from parent
+workspace/*/build/*/
+!workspace/*/build/engine.yaml
