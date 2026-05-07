@@ -68,8 +68,29 @@ if [[ -n "$LAST_PAUSE" && "$LAST_PAUSE" != "null" && "$LAST_PAUSE" != "~" ]]; th
   [[ -n "$LAST_PAUSE_AT" && "$LAST_PAUSE_AT" != "null" ]] && echo "   ($LAST_PAUSE_AT)"
 fi
 
+# build/ 디렉토리 인지 (v0.3 prototype-build-loop)
+BUILD_DIR="$PIPELINE_ROOT/workspace/$SLUG/build"
+if [[ -d "$BUILD_DIR" ]]; then
+  if command -v yq >/dev/null 2>&1; then
+    CURRENT_ROUND=$(yq -r '.build_state.current_round // ""' "$STATE_FILE" 2>/dev/null)
+    LAST_SNAPSHOT=$(yq -r '.build_state.last_snapshot // ""' "$STATE_FILE" 2>/dev/null)
+    BUILD_ENGINE=$(yq -r '.artifacts.engine // ""' "$STATE_FILE" 2>/dev/null)
+  else
+    CURRENT_ROUND=$(awk '/^build_state:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /current_round:/{print; exit}' "$STATE_FILE" | sed 's/.*current_round: *//' | tr -d '"')
+    LAST_SNAPSHOT=$(awk '/^build_state:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /last_snapshot:/{print; exit}' "$STATE_FILE" | sed 's/.*last_snapshot: *//' | tr -d '"')
+    BUILD_ENGINE=$(awk '/^artifacts:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /^[[:space:]]+engine:/{print; exit}' "$STATE_FILE" | sed 's/.*engine: *//' | tr -d '"')
+  fi
+  echo ""
+  echo "🛠 build mode active:"
+  [[ -n "$BUILD_ENGINE" && "$BUILD_ENGINE" != "null" ]] && echo "   엔진: $BUILD_ENGINE"
+  [[ -n "$CURRENT_ROUND" && "$CURRENT_ROUND" != "null" ]] && echo "   현재 라운드: v$CURRENT_ROUND"
+  [[ -n "$LAST_SNAPSHOT" && "$LAST_SNAPSHOT" != "null" ]] && echo "   마지막 스냅샷: $LAST_SNAPSHOT"
+fi
+
 echo ""
 echo "이어가기:  \"이어서 하자\"  또는  /concept-pipeline"
 echo "상태 확인: /cp-status"
 echo "재실행:    /cp-redo <단계번호>"
+echo "프로토타입: \"프로토타입 시작\"  또는  /prototype-start"
+echo "스냅샷:    /prototype-snapshot <tag>"
 echo "================================"
