@@ -205,7 +205,17 @@ SessionStart 훅:
 
 ## 다음 단계
 
-본 파이프라인의 출력 패밀리(`06-integrated-spec.md` + `06-art-bible.md` + `06-tech-spec.md`)를 가지고 프로토타입 → 본 게임 빌드업. 빌드업 워크플로우는 별도로 설계한다.
+본 파이프라인의 출력 패밀리(`06-integrated-spec.md` + `06-art-bible.md` + `06-tech-spec.md` + `06-changelog.md`)를 가지고 프로토타입 빌드로 이어진다.
+
+### prototype-build-loop (v0.3~)
+
+같은 레포의 `prototype-build-loop` 스킬이 단계 7 산출물을 입력으로 받아 Godot/Unity 프로토타입 빌드와 라운드 단위 AI 수정을 진행한다.
+
+```
+"프로토타입 시작"  /  /prototype-start
+```
+
+자세한 내용: [prototype-build-loop spec](docs/superpowers/specs/2026-05-06-prototype-build-loop-design.md)
 
 ## 알려진 이슈 / TODO
 
