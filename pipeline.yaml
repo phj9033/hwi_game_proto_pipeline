@@ -4,7 +4,7 @@
 
 pipeline:
   name: concept-to-prototype
-  version: "0.4"
+  version: "0.5"
   workspace_root: ./workspace
   language: ko                   # 산출물 한국어 작성
   config_ref: config.yaml
@@ -27,6 +27,13 @@ pipeline:
 #   - 게이트(completion_check) 강화     → patch (0.2 → 0.2.1)
 #   - 호환 ✕ 변경 (재실행 필요)         → major bump (0.x → 1.0)
 changelog:
+  - version: "0.5"
+    date: "2026-05-11"
+    changes:
+      - "auto-build substeps: Round 0 → Round 0.1~0.4 분수 substep 자동 연쇄"
+      - "state_schema.resume_fields.build_state 에 current_substep, auto_build_status 추가 (옵션)"
+      - "단계 6 iteration_log.schema.round_variants 에 v0.1~v0.4 신규 (기존 v0 은 backward compat 로 유지, 신규 프로젝트는 v0.1~v0.4 사용)"
+      - "naming_rule 갱신: Round 0 의 substep 은 0.1~0.4 분수 허용. Round N≥1 은 정수 단조."
   - version: "0.4"
     date: "2026-05-07"
     changes:
@@ -95,6 +102,8 @@ state_schema:
     last_user_response_at: ISO 8601 | null
     build_state:                       # 프로토타입 빌드 라운드 상태 (v0.3~)
       current_round: integer | null    # 마지막 완료 라운드 (정수)
+      current_substep: string | null   # 신규 v0.5: "0.1"|"0.2"|"0.3"|"0.4"|null. 자동 빌드 진행 중일 때만 채워짐, 완료/실패 시 null
+      auto_build_status: string | null # 신규 v0.5: in_progress | completed | failed_at_<substep> | null. "completed" 는 프로젝트 lifetime 보존.
       last_snapshot: string | null     # 마지막 git tag (또는 null)
       last_round_at: ISO 8601 | null
       system_keywords: array | null    # SSOT §C·§B 추출 캐시
@@ -352,12 +361,38 @@ steps:
         round_header: "## v{N} — {라운드명} ({YYYY-MM-DD})"
         # round_fields 는 v0.3 에서 round_variants 로 대체됨 (라운드 종류별 다른 필드 셋).
         round_variants:                # v0.3~ : 라운드 종류별 필드 셋
-          v0:                          # Round 0 — 초기 환경 (prototype-build-loop)
-            description: "build/{engine}/ 스캐폴드 직후 1회. AI 수정 라운드 ✕."
+          v0:                          # deprecated v0.5: 기존 프로젝트 backward compat. 신규는 v0.1~v0.4.
+            description: "build/{engine}/ 스캐폴드 직후 1회 (deprecated, 신규는 v0.1)"
             fields:
               - "**엔진**: 선택된 엔진 + 버전"
               - "**세팅**: tech-spec §F·§G·§I 어느 만큼 스캐폴드되었나"
               - "**시드 컨텐츠**: 코어 루프 1 사이클 placeholder 동작 범위"
+          v0.1:                        # v0.5~ : auto-build substep 1
+            description: "엔진 init + tech-spec §F·§G 모듈/시그널/Resource 스캐폴드"
+            fields:
+              - "**엔진**: 선택된 엔진 + 버전"
+              - "**모듈**: tech-spec §F 의 N 항목 스텁"
+              - "**시그널·Resource**: §G 의 N 시그널, N Resource"
+          v0.2:                        # v0.5~ : auto-build substep 2
+            description: "SSOT §B 코어 메카닉 1 cycle 최소 구현"
+            fields:
+              - "**구현 §B**: 핵심 메카닉명"
+              - "**1 cycle 흐름**: 입력 → 동작 → 결과"
+              - "**하드코딩**: 추후 §C 시스템으로 빠질 값 목록"
+          v0.3:                        # v0.5~ : auto-build substep 3 (stop 라인)
+            description: "AC1 필수 §C 시스템 + 테스트 인프라 (실행 가능, pass/fail 무관)"
+            fields:
+              - "**구현 §C**: AC1 필수 시스템 N개"
+              - "**AC1 테스트**: 테스트 함수명"
+              - "**실행 결과**: 원문 1~3줄, pass/fail 명시"
+              - "**다음 라운드 권고**: fail 인 경우 가설 진단 1줄"
+          v0.4:                        # v0.5~ : auto-build substep 4
+            description: "art-bible 슬롯 → PIL placeholder PNG + sibling prompt.md"
+            fields:
+              - "**슬롯 수**: N"
+              - "**카테고리 분포**: creature N, character N, object N, ui N, effect N"
+              - "**placeholder 규칙**: §6.2 표 따름"
+              - "**프롬프트 파일 경로**: build/{engine}/art/{slot_id}.prompt.md"
           vN:                          # Round N ≥ 1 — AI 수정 라운드
             description: "사용자 피드백·요청 → AI 패치 → 적용 1 사이클 종료 시"
             fields:
@@ -370,7 +405,7 @@ steps:
           - "변경이 SSOT 룰을 건드리면 → 06-integrated-spec.md 부록 X 에도 1줄 등재"
           - "변경이 신규 시그널/모듈 도입이면 → 06-tech-spec.md 의 시그널 카탈로그 갱신"
           - "변경이 신규 에셋 슬롯이면 → 06-art-bible.md 슬롯 맵 갱신"
-      naming_rule: "라운드 N 은 정수 단조 증가. v3.1 같은 patch bump 는 같은 사이클 내 보강에만"
+      naming_rule: "Round 0 의 auto-build substep 은 0.1~0.4 분수 허용. Round N ≥ 1 은 정수 단조 증가. v3.1 같은 patch bump 는 같은 사이클 내 보강에만."
 
   - id: 7
     slug: ready
