@@ -20,3 +20,8 @@ Thumbs.db
 # prototype-build-loop — build trees have their own .git, exclude from parent
 workspace/*/build/*/
 !workspace/*/build/engine.yaml
+
+# Python build artifacts (gen_placeholders.py 등 tools/)
+__pycache__/
+*.pyc
+*.pyo

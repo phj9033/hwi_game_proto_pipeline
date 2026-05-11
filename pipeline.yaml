@@ -130,36 +130,47 @@ state_schema:
   example: |
     project: my-game
     created: 2026-04-28T16:00:00
-    pipeline_version: "0.2"
-    current_step: 5
+    pipeline_version: "0.5"
+    current_step: 8                  # 단계 7 게이트 통과 + auto-build 완료 후
     sub_progress:
-      section: "시스템 인벤토리"
-      last_section_completed: "코어 루프"
-      step_5_section: 3
+      section: null
+      last_section_completed: null
+      step_5_section: null
       step_6_section: null
     completed_steps:
       - { id: 1, slug: concept, completed_at: "...", output_files: ["01-concept.md"] }
       - { id: 2, slug: draft-3-branches, completed_at: "...", output_files: ["02-draft-A.md","02-draft-B.md","02-draft-C.md"] }
       - { id: 3, slug: save, completed_at: "...", output_files: [] }
       - { id: 4, slug: evaluate-5axis, completed_at: "...", output_files: ["04-eval-report.md"] }
+      - { id: 5, slug: detailed-gdd, completed_at: "...", output_files: ["05-detailed-gdd.md"] }
+      - { id: 6, slug: integrated-spec, completed_at: "...", output_files: ["06-integrated-spec.md","06-art-bible.md","06-tech-spec.md","06-changelog.md"] }
+      - { id: 7, slug: ready, completed_at: "...", output_files: [] }
     artifacts:
       concept: "01-concept.md"
       drafts: ["02-draft-A.md","02-draft-B.md","02-draft-C.md"]
       selected_branch: "A"
       eval_scores: { A: 3.65, B: 3.45, C: 3.55 }
-      detailed_gdd: null
-      integrated_spec: null
-      art_bible: null
-      tech_spec: null
-      changelog: null
-      engine: null
-      build_initialized: false
-    last_pause_reason: "단계 5 - 시스템 인벤토리 섹션 응답 대기"
-    last_pause_at: "2026-04-28T16:35:00"
-    last_user_response_at: "2026-04-28T16:30:00"
+      detailed_gdd: "05-detailed-gdd.md"
+      integrated_spec: "06-integrated-spec.md"
+      art_bible: "06-art-bible.md"
+      tech_spec: "06-tech-spec.md"
+      changelog: "06-changelog.md"
+      engine: "godot"
+      build_initialized: true
+    build_state:                      # v0.5: auto-build substep + Round N 추적
+      current_round: 0                # auto-build 완료 시 0, Round 1+ 진행 시 정수 증가
+      current_substep: null           # auto-build 진행 중일 때만 "0.1"|"0.2"|"0.3"|"0.4"
+      auto_build_status: "completed"  # in_progress | completed | failed_at_0.X | aborted_at_0.X | null
+      last_snapshot: null
+      last_round_at: "2026-05-11T10:00:00"
+      system_keywords: ["코어 루프", "어종 잠금", "..."]
+    last_pause_reason: "auto-build 완료, 사용자 첫 라운드 대기"
+    last_pause_at: "2026-05-11T10:00:00"
+    last_user_response_at: "2026-05-11T09:55:00"
     notes:
       - "2026-04-28T16:00: 신규 프로젝트 시작"
       - "2026-04-28T16:25: 단계 4 평가 완료, 분기 A 선택"
+      - "2026-05-11T10:00: auto-build Round 0.1~0.4 완료 (godot)"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 단계 정의
