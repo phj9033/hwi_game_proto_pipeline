@@ -11,7 +11,7 @@ description: 게임 컨셉 파이프라인 단계 7 통과 후 프로토타입 �
 
 ## 2. 모드
 
-- **Round 0 (1회)**: 엔진 선택 + L4 스캐폴드 생성 (코어 루프 placeholder 동작)
+- **Round 0 (1회, 자동 빌드 substep 4개)**: 엔진 선택 후 `auto-build-orchestrator.md` 가 Round 0.1 (scaffold) → 0.2 (코어 루프 §B) → 0.3 (§C 시스템 + AC1) → 0.4 (art placeholder) 를 자동 연쇄. substep 마다 commit + ITERATION_LOG 항목. 중간 실패 시에만 사용자 개입.
 - **Round N (반복)**: 사용자 수정 요청·피드백 → AI 패치 제안 → 사용자 승인 → 적용·로깅
 - **Snapshot (선택)**: 사용자 명시 호출 → `build/{engine}/` 의 git tag
 
@@ -19,7 +19,7 @@ description: 게임 컨셉 파이프라인 단계 7 통과 후 프로토타입 �
 
 | 동작 | 트리거 |
 |------|--------|
-| Round 0 | 명시: "프로토타입 시작" / "프로토타입 빌드" / `/prototype-start` |
+| Round 0 (auto-build) | 명시: "프로토타입 시작" / "프로토타입 빌드" / `/prototype-start` — orchestrator 가 0.1~0.4 자동 연쇄 |
 | Round N | 자동 감지 (§5) 또는 `/prototype-round` |
 | Snapshot | 명시: "스냅샷 v… 찍어줘" / `/prototype-snapshot <tag>` |
 
@@ -70,19 +70,18 @@ description: 게임 컨셉 파이프라인 단계 7 통과 후 프로토타입 �
 
 라운드 자체는 취소.
 
-## 6. Round 0 절차
+## 6. Round 0 절차 (auto-build)
 
-`prompts/prototype-build-loop/round0-scaffold.md` 참조.
+`prompts/prototype-build-loop/auto-build-orchestrator.md` 가 진입점. orchestrator 가 substep 0.1~0.4 를 순차 호출:
 
-요약:
-1. 전제 검증 (단계 7·산출물 4종)
-2. 엔진 선택 질문 ("Godot 4 / Unity 6 중?")
-3. `engines/{선택}.md` 어댑터 로드·검증 (7 H2 헤더)
-4. 스캐폴드 계획 표시 + 사용자 확인
-5. 어댑터 *프로젝트 init 절차* 실행
-6. tech-spec §F·§G·§I 매핑 → 모듈·시그널·Resource·테스트 골격 + 코어 루프 placeholder
-7. `build/{engine}/` git init + 첫 commit
-8. `engine.yaml`, `ITERATION_LOG.md` v0 항목, `state.yaml` 갱신
+- **0.1**: `prompts/prototype-build-loop/round0.1-scaffold.md` — 엔진 init + §F·§G 스캐폴드
+- **0.2**: `prompts/prototype-build-loop/round0.2-core-loop.md` — §B 코어 메카닉 1 cycle
+- **0.3**: `prompts/prototype-build-loop/round0.3-systems-ac1.md` — AC1 필수 §C + 테스트 인프라 (stop 라인)
+- **0.4**: `prompts/prototype-build-loop/round0.4-art-placeholders.md` — `tools/gen_placeholders.py` 호출
+
+substep 마다 commit + ITERATION_LOG v0.{1..4} 항목. 실패 시 마지막 성공 substep 유지, 사용자에게 3 옵션 (재개·수동 전환·롤백) 제시. 자세한 절차는 `auto-build-orchestrator.md` 참조.
+
+기존 `prompts/prototype-build-loop/round0-scaffold.md` 는 deprecated (backward compat 용 보존).
 
 ## 7. Round N 절차
 
@@ -132,19 +131,30 @@ Round {N}: {라운드명}
 | 엔진 선택 후 어댑터 부재 | 에러 + `adapter-template.md` 복제 가이드 |
 | 어댑터 §4.3 schema 위반 (필수 H2 누락) | 에러 + 누락 헤더 명시 |
 | Round 0 스캐폴드 일부 실패 | 트랜잭션 ✕. 실패 지점까지 보존 + 사용자 보고 |
+| auto-build substep 중 실패 | orchestrator 의 3 옵션 제시 (재개 1회 / 수동 전환 / 롤백). 자가 디버그 무한 루프 가드 (substep 당 자동 재시도 1회) |
+| auto-build 진입 조건 불충족 (기존 build/ 존재) | "자동 빌드 ✕. 기존 roundN-patch 진입" 안내 |
 | 자동 감지 오인식 | 규칙 1·신뢰도 중간 확인이 1차 가드. 사용자 "취소" 가능 |
 | SSOT 자체 수정 요청 | `/cp-redo 6` 안내 후 라운드 취소 |
 | 스냅샷 시 uncommitted 충돌 | 3 옵션 (auto-commit/stash/취소) |
 | state.yaml v0.2.1 → v0.3 마이그레이션 | (1) `.archive/state-pre-migration-{timestamp}.yaml` 백업 → (2) 누락 필드 기본값 추가 (`artifacts.engine=null`, `artifacts.build_initialized=false`, `build_state=null`) → (3) `notes` 에 `"schema migration 0.2.1 → 0.3 (build-loop fields added)"` 1줄 → (4) `pipeline_version: "0.3"` 갱신. 실패 시 백업 보존 + 사용자 보고. |
+| state.yaml v0.4 → v0.5 마이그레이션 | (1) `.archive/state-pre-migration-{timestamp}.yaml` 백업 → (2) `build_state.current_substep=null`, `build_state.auto_build_status=null` 기본값 추가 → (3) `notes` 에 `"schema migration 0.4 → 0.5 (auto-build substeps added)"` 1줄 → (4) `pipeline_version: "0.5"` 갱신. |
 | 어댑터 checksum 불일치 | 사용자 경고 + 다음 Round 0 재실행 권고 |
 
 ## 11. 호출되는 외부 자산
 
 - `engines/godot.md`, `engines/unity.md` — 엔진별 어댑터 데이터
-- `prompts/prototype-build-loop/round0-scaffold.md` — Round 0 본문
+- `prompts/prototype-build-loop/auto-build-orchestrator.md` — Round 0 진입점
+- `prompts/prototype-build-loop/round0.1-scaffold.md` — substep 1
+- `prompts/prototype-build-loop/round0.2-core-loop.md` — substep 2
+- `prompts/prototype-build-loop/round0.3-systems-ac1.md` — substep 3
+- `prompts/prototype-build-loop/round0.4-art-placeholders.md` — substep 4
+- `prompts/prototype-build-loop/round0-scaffold.md` — deprecated (v0.4 이전 backward compat)
 - `prompts/prototype-build-loop/roundN-patch.md` — Round N 본문
+- `.claude/skills/prototype-build-loop/tools/gen_placeholders.py` — art placeholder 헬퍼
 - `pipeline.yaml.steps[5].iteration_log.schema.round_variants` — 로그 스키마
 
 ## 12. spec 참조
 
-설계 근거: `docs/superpowers/specs/2026-05-06-prototype-build-loop-design.md`
+설계 근거:
+- `docs/superpowers/specs/2026-05-06-prototype-build-loop-design.md` — 본 스킬 도입 spec
+- `docs/superpowers/specs/2026-05-11-auto-build-substeps-design.md` — Round 0 → 0.1~0.4 substep 확장 (v0.5)
