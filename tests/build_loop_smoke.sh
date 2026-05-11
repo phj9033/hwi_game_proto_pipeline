@@ -67,6 +67,17 @@ print('OK' if 'v0' in rv and 'vN' in rv else 'MISS')
 ")
 [[ "$ROUND_VARIANTS" == "OK" ]] && ok "iteration_log.round_variants v0+vN" || fail "round_variants v0/vN 누락"
 
+ROUND_SUBSTEPS=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('pipeline.yaml'))
+step6 = next(s for s in d['steps'] if s['id'] == 6)
+rv = step6.get('iteration_log', {}).get('schema', {}).get('round_variants', {})
+expected = ['v0.1', 'v0.2', 'v0.3', 'v0.4']
+missing = [k for k in expected if k not in rv]
+print('OK' if not missing else 'MISS:' + ','.join(missing))
+")
+[[ "$ROUND_SUBSTEPS" == "OK" ]] && ok "round_variants v0.1~v0.4 모두 존재 (v0.5+)" || fail "round_variants substep: $ROUND_SUBSTEPS"
+
 # ─── 2. .gitignore ───
 echo ""
 echo "[2] .gitignore 빌드 트리 격리"
@@ -85,7 +96,14 @@ for f in \
   ".claude/commands/prototype-round.md" \
   ".claude/commands/prototype-snapshot.md" \
   "prompts/prototype-build-loop/round0-scaffold.md" \
-  "prompts/prototype-build-loop/roundN-patch.md"; do
+  "prompts/prototype-build-loop/roundN-patch.md" \
+  "prompts/prototype-build-loop/auto-build-orchestrator.md" \
+  "prompts/prototype-build-loop/round0.1-scaffold.md" \
+  "prompts/prototype-build-loop/round0.2-core-loop.md" \
+  "prompts/prototype-build-loop/round0.3-systems-ac1.md" \
+  "prompts/prototype-build-loop/round0.4-art-placeholders.md" \
+  ".claude/skills/prototype-build-loop/tools/gen_placeholders.py" \
+  ".claude/skills/prototype-build-loop/tools/test_gen_placeholders.py"; do
   [[ -f "$f" ]] && ok "$f" || fail "$f 없음"
 done
 
@@ -128,6 +146,28 @@ if [[ -f "$HOOK" ]]; then
   grep -qF 'build mode active' "$HOOK" && ok "build mode 표시 라인" || fail "build mode 표시 라인 없음"
   grep -qF 'BUILD_DIR=' "$HOOK" && ok "BUILD_DIR 변수 정의" || fail "BUILD_DIR 변수 정의 없음"
   grep -qF '/prototype-start' "$HOOK" && ok "프로토타입 안내 줄" || fail "프로토타입 안내 줄 없음"
+fi
+
+# ─── 7. 06b-art-bible.md 슬롯 맵 컬럼 확장 (v0.5) ───
+echo ""
+echo "[7] 06b-art-bible.md 슬롯 맵 확장 (v0.5)"
+AB="prompts/06b-art-bible.md"
+if [[ -f "$AB" ]]; then
+  grep -q "category" "$AB" && ok "category 컬럼 명시" || fail "category 컬럼 미명시"
+  grep -q "palette_ref" "$AB" && ok "palette_ref 컬럼 명시" || fail "palette_ref 컬럼 미명시"
+fi
+
+# ─── 8. gen_placeholders.py 단위 테스트 (v0.5) ───
+echo ""
+echo "[8] gen_placeholders.py 단위 테스트"
+if python3 -c "import PIL" 2>/dev/null; then
+  if python3 -m pytest .claude/skills/prototype-build-loop/tools/test_gen_placeholders.py -q 2>&1 | tail -3 | grep -qE "passed"; then
+    ok "gen_placeholders.py pytest 통과"
+  else
+    fail "gen_placeholders.py pytest 실패"
+  fi
+else
+  warn "Pillow 미설치 — gen_placeholders.py 테스트 스킵"
 fi
 
 # ─── 결과 요약 ───
