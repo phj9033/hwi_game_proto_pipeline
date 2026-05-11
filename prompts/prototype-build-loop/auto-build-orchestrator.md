@@ -61,15 +61,14 @@
 
    옵션:
    1. 재개 — 진단 1회 반영 후 0.{X} 재시도 (재시도 1회만)
-   2. 수동 전환 — 자동 abort. Round 1+ 사용자 피드백 라운드 진입.
-        (남은 substep 은 별도 슬래시 /cp-art-rebuild 등으로 회고 적용 가능)
+   2. 수동 전환 — 자동 abort. Round 1+ 사용자 피드백 라운드 진입. 남은 substep 은 사용자가 Round 1+ 안에서 수동 요청.
    3. 롤백 — git reset --hard {지정 substep commit}. **commit 폐기 destructive — 명시 확인 필수**.
 
    선택?
    ```
 
    - 옵션 1 (재개): substep 본문에 실패 원인 진단 1줄 추가 + 재시도. 두 번째 실패 시 옵션 1 자동 비활성, 사용자에게 "옵션 2 또는 3 만" 안내.
-   - 옵션 2 (수동 전환): uncommitted 보존, `auto_build_status="aborted_at_0.{X}"`, 안내 후 종료. 사용자 다음 발화부터 Round 1+ 자동 감지.
+   - 옵션 2 (수동 전환): uncommitted 보존, `auto_build_status="aborted_at_0.{X}"`, 안내 후 종료. 사용자 다음 발화부터 Round 1+ 자동 감지. (남은 substep 의 회고 적용 슬래시 `/cp-art-rebuild` 는 추후 구현 예정 — 현재는 사용자가 Round 1+ 라운드 안에서 수동 요청)
    - 옵션 3 (롤백): 사용자 확인 ("rollback 0.{Y} commit 까지 정말? Y/N") → Y 면 `git reset --hard`, N 면 취소.
 
 6. **최종 보고 (성공 경로)**

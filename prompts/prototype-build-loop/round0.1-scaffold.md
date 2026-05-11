@@ -12,7 +12,7 @@
 - `workspace/<slug>/build/{engine}/` 디렉토리 + scaffold (모듈·시그널·Resource·디렉토리 트리)
 - `workspace/<slug>/build/engine.yaml`
 - `workspace/<slug>/ITERATION_LOG.md` 에 v0.1 항목
-- `workspace/<slug>/state.yaml.build_state.current_substep = "0.1"` (진행 중) → `null` (substep 0.4 완료 후)
+- `workspace/<slug>/state.yaml.build_state.current_substep = "0.1"` (본 substep 진행 중. 0.4 완료 시점에서 0.4 가 `null` 로 마감)
 
 ## 절차
 
