@@ -1,6 +1,6 @@
 ---
 name: prototype-build-loop
-description: 게임 컨셉 파이프라인 단계 7 통과 후 프로토타입 빌드를 시작하고 라운드 단위 AI 수정을 관리한다. Godot/Unity 둘 다 지원, 시작 시 사용자 선택. ITERATION_LOG.md 에 Round 0 (초기 환경) + Round N (AI 수정) 만 기록 — 사용자 직접 수정은 누락 허용. 트리거 - "프로토타입 시작", "프로토타입 빌드", /prototype-start, /prototype-round, /prototype-snapshot. 자동 감지 - build/ 디렉토리 활성 + 사용자 발화에 수정 의도 (액션 동사 추가/수정/변경/제거/바꿔/줄여/늘려/고쳐, 평가어 어색해/안 어울려/이상해/약해/세/지루해, SSOT 시스템·메카닉 키워드) 포함 시 Round N 진입. 의문사 (어떻게/왜/뭐가/언제/어디) 우선 — 질문이면 답변만 하고 라운드 ✕.
+description: 게임 컨셉 파이프라인 단계 7 통과 후 프로토타입 빌드를 시작하고 라운드 단위 AI 수정을 관리한다. Godot/Unity 둘 다 지원, 시작 시 사용자 선택. Round 0 는 자동 빌드 substep 4개 (0.1 scaffold / 0.2 코어 루프 §B / 0.3 §C+AC1 / 0.4 art placeholder) 자동 연쇄, 그 후 Round N (AI 수정 라운드). ITERATION_LOG.md 에 v0.1~v0.4 + vN 기록 — 사용자 직접 수정은 누락 허용. 트리거 - "프로토타입 시작", "프로토타입 빌드", /prototype-start, /prototype-round, /prototype-snapshot. 자동 감지 - build/ 디렉토리 활성 + 사용자 발화에 수정 의도 (액션 동사 추가/수정/변경/제거/바꿔/줄여/늘려/고쳐, 평가어 어색해/안 어울려/이상해/약해/세/지루해, SSOT 시스템·메카닉 키워드) 포함 시 Round N 진입. 의문사 (어떻게/왜/뭐가/언제/어디) 우선 — 질문이면 답변만 하고 라운드 ✕.
 ---
 
 # prototype-build-loop
@@ -27,7 +27,7 @@ description: 게임 컨셉 파이프라인 단계 7 통과 후 프로토타입 �
 
 - 활성 프로젝트가 단계 7 통과 (`workspace/<slug>/state.yaml.completed_steps` 에 id=7)
 - 산출물 4 종 존재: `06-integrated-spec.md`, `06-art-bible.md`, `06-tech-spec.md`, `06-changelog.md`
-- pipeline.yaml.version >= "0.3"
+- pipeline.yaml.version >= "0.5" (auto-build substep 사용 시. v0.3~v0.4 에서는 기존 단일 Round 0 만 가능)
 
 ## 5. Round N 자동 감지 규칙
 
