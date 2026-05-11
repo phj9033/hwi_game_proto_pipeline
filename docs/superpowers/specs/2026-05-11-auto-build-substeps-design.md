@@ -5,7 +5,7 @@ status: draft
 revision: 1
 supersedes_partial: 2026-05-06-prototype-build-loop-design.md (§6 Round 0 절차)
 related:
-  - pipeline.yaml (≥ v0.3, 본 spec 채택 시 v0.4 으로 bump)
+  - pipeline.yaml (현재 v0.4, 본 spec 채택 시 v0.5 으로 bump)
   - .claude/skills/prototype-build-loop/SKILL.md
   - prompts/prototype-build-loop/round0-scaffold.md (deprecated by this spec)
   - prompts/06b-art-bible.md
@@ -42,7 +42,7 @@ related:
 
 ### 4.1 흐름 비교
 
-**현재 (v0.3)**:
+**현재 (v0.4)**:
 ```
 사용자 "프로토타입 시작" + 엔진 선택
   → Round 0 (scaffold placeholder)
@@ -50,7 +50,7 @@ related:
   → Round 1, 2, ... (사용자 피드백)
 ```
 
-**변경 (v0.4)**:
+**변경 (v0.5)**:
 ```
 사용자 "프로토타입 시작" + 엔진 선택  ─┐
   → Round 0.1 (scaffold)              │
@@ -61,13 +61,15 @@ related:
   → Round 1, 2, ... (사용자 피드백, 기존 그대로)
 ```
 
-### 4.2 state.yaml.build_state 스키마 (v0.4)
+### 4.2 state.yaml.build_state 스키마 (v0.5)
 
 ```yaml
 build_state:
   current_round: 0              # 기존, 마지막 완료 라운드 (정수)
   current_substep: "0.4"        # 신규, 자동 빌드 진행 중일 때만 (완료 시 null)
   auto_build_status: "completed"  # 신규: in_progress | completed | failed_at_<substep>
+                                # "completed" 는 프로젝트 lifetime 동안 유지 (라운드마다 리셋 ✕).
+                                # Round 1+ 진입 후에도 "자동 빌드는 1회 끝났다" 표시로 영구 보존.
   system_keywords: [...]        # 기존
   last_round_at: "..."          # 기존
   last_snapshot: null           # 기존
@@ -182,21 +184,25 @@ build_state:
 
 ### 6.1 슬롯 추출 (art-bible 의존)
 
-`06-art-bible.md` 에 다음 형식의 슬롯 테이블을 강제:
+**현재 art-bible (06b-art-bible.md 출력)** 은 이미 *에셋 슬롯 맵* 테이블을 포함: `슬롯 ID | 출처 | 해상도 | 포맷 | 통합 위치`.
+
+본 spec 은 이 기존 테이블을 **확장** (새 테이블 신설 ✕) 하여 다음 컬럼으로 통합:
 
 ```markdown
-## §Z 슬롯 목록
+## §Z 에셋 슬롯 맵 (확장)
 
-| slot_id | category | size | palette_ref | 설명 |
-|---------|----------|------|-------------|------|
-| fish_01 | creature | 32x32 | §X.2 (ocean) | 작은 청록 물고기 |
-| player  | character | 48x48 | §X.1 (warm) | 주인공 |
-| hud_bg  | ui | 320x64 | §X.3 (neutral) | 상단 HUD 배경 |
+| slot_id | category | 해상도 | palette_ref | 포맷 | 통합 위치 | 설명 |
+|---------|----------|-------|-------------|------|---------|------|
+| fish_01 | creature | 32x32 | §X.2 (ocean) | PNG | scenes/fish.tscn | 작은 청록 물고기 |
+| player  | character | 48x48 | §X.1 (warm) | PNG | scenes/player.tscn | 주인공 |
+| hud_bg  | ui | 320x64 | §X.3 (neutral) | PNG | scenes/hud.tscn | 상단 HUD 배경 |
 ```
 
-→ `prompts/06b-art-bible.md` 의 출력 템플릿에 §Z 섹션을 항상 포함하도록 prompt 수정 (구현 계획 단계 별도 항목).
+신규 컬럼 2개: `category` (placeholder 도형·색 규칙용), `palette_ref` (팔레트 참조). 기존 컬럼은 보존.
 
-기존 프로젝트의 art-bible 에 §Z 가 없으면: Round 0.4 가 LLM 으로 art-bible 본문에서 슬롯 추론, 결과를 §Z 섹션으로 art-bible 에 append (`06-changelog.md` 에 v0.4 기록).
+→ `prompts/06b-art-bible.md` 의 출력 템플릿에 위 컬럼 확장을 항상 포함하도록 prompt 수정 (구현 계획 단계 별도 항목). 출처 (출처 컬럼) 도 유지 — Round 0.4 는 출처가 placeholder 인 슬롯만 자동 생성, 외부 자산 출처는 사용자 직접 배치.
+
+기존 프로젝트의 art-bible 에 신규 컬럼이 없으면: Round 0.4 가 LLM 으로 art-bible 본문에서 category·palette_ref 추론, 결과를 art-bible 의 슬롯 맵 컬럼에 보강 append (`06-changelog.md` 에 v0.4 기록).
 
 ### 6.2 카테고리별 placeholder 규칙
 
@@ -337,7 +343,8 @@ substep 내부에 여러 파일 변경 중 일부만 성공:
 | `pipeline.yaml` | `version: "0.3" → "0.4"`, `steps[5].iteration_log.schema` 에 substep round_variants 추가 |
 | `.claude/skills/prototype-build-loop/engines/godot.md` | 에셋 로드 컨벤션 (`art/{slot_id}.png`) 1줄 |
 | `.claude/skills/prototype-build-loop/engines/unity.md` | 동일 |
-| `prompts/06b-art-bible.md` | 출력에 §Z 슬롯 테이블 강제 |
+| `prompts/06b-art-bible.md` | 슬롯 맵 테이블에 `category` / `palette_ref` 컬럼 강제 |
+| `prompts/06c-tech-spec.md` | (선택, 구현 계획에서 결정) tech-spec §I AC ↔ §C 매핑 필드 강제 — Round 0.3 의 AC1 ↔ §C 시스템 매핑 정확도 보장 |
 | `.claude/commands/prototype-start.md` (있으면) | orchestrator 진입점 호출 |
 
 ### 9.3 영향 ✕
@@ -363,14 +370,16 @@ substep 내부에 여러 파일 변경 중 일부만 성공:
 
 - 신규 게임 컨셉 → 단계 1~7 → "프로토타입 시작" → 자동 빌드 → AC1 테스트 결과 확인 → Round 1 사용자 피드백
 
-## 11. 마이그레이션 (pipeline.yaml v0.3 → v0.4)
+## 11. 마이그레이션 (pipeline.yaml v0.4 → v0.5)
 
-1. `pipeline.yaml.version: "0.3" → "0.4"`
+현재 `pipeline.yaml.version` 은 v0.4 (RAG 분리 시점). 본 spec 채택으로 v0.5 로 bump.
+
+1. `pipeline.yaml.version: "0.4" → "0.5"`
 2. `state.yaml`: `pipeline_version` 동기화 (선택), `build_state.current_substep` / `auto_build_status` 필드 추가 (기본값 null)
 3. `.archive/state-pre-migration-{timestamp}.yaml` 백업
-4. `state.yaml.notes` 에 `"schema migration 0.3 → 0.4 (auto-build substeps added)"` 1줄
+4. `state.yaml.notes` 에 `"schema migration 0.4 → 0.5 (auto-build substeps added)"` 1줄
 
-SKILL.md §10 에 케이스 추가.
+SKILL.md §10 에 v0.4→v0.5 마이그레이션 케이스 추가.
 
 ## 12. 미해결 / 추후
 
