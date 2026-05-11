@@ -1,4 +1,8 @@
-# Round 0 — 초기 환경 스캐폴드 프롬프트
+> **DEPRECATED (v0.5+)** — 본 파일은 v0.5 이전 backward compat 용. 신규 프로젝트는 `auto-build-orchestrator.md` → `round0.1-scaffold.md` ~ `round0.4-art-placeholders.md` 사용.
+>
+> Spec: `docs/superpowers/specs/2026-05-11-auto-build-substeps-design.md`
+
+# Round 0 — 초기 환경 스캐폴드 프롬프트 (deprecated)
 
 ## 입력
 - `06-tech-spec.md` (§F 모듈, §G 시그널·Resource, §I AC)
