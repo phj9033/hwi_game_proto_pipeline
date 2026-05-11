@@ -7,10 +7,13 @@
 - 4종 산출물 (`06-integrated-spec.md` / `06-art-bible.md` / `06-tech-spec.md` / `06-changelog.md`)
 - `state.yaml.build_state.current_round` 가 null/부재 (첫 진입)
 - `build/` 비어있음
+- 사용자 선택 후 로드될 어댑터: `.claude/skills/prototype-build-loop/engines/{engine}.md` (godot / unity)
 
 ## 출력
-- Round 0.1~0.4 모두 통과 → `build_state.auto_build_status = "completed"`, `current_round = 0`
+- Round 0.1~0.4 모두 통과 → `build_state.auto_build_status = "completed"`, `current_round = 0` → 사용자 다음 발화부터 Round 1+ 자동 감지 (SKILL.md §5)
 - 중간 실패 → `build_state.auto_build_status = "failed_at_<substep>"`, 사용자에게 3 옵션 제시
+
+**`auto_build_status` 가능 값**: `in_progress` | `completed` | `failed_at_0.{X}` (재시도 실패 포함, 동일 값 유지) | `aborted_at_0.{X}` (사용자가 수동 전환 선택) | `null` (자동 빌드 미진입)
 
 ## 절차
 
@@ -18,8 +21,8 @@
    - 위 입력 모두 만족하는지 확인
    - 불충족 시:
      - 단계 7 미통과 → 거부 + 누락 산출물 안내
-     - 이미 build/ 존재 + Round 1+ 진행 중 → "자동 빌드 ✕ (기존 프로젝트). 기존 roundN-patch 진입" 안내
-     - 기존 build/ 비어있지 않지만 Round 0 도 아님 (이상 상태) → 사용자 확인 후 처리
+     - 이미 build/ 존재 + Round 1+ 진행 중 (`state.yaml.build_state.current_round >= 1`) → "자동 빌드 ✕ (기존 프로젝트). 기존 roundN-patch 진입" 안내
+     - 기존 build/ 비어있지 않지만 Round 0 도 아님 (이상 상태: build/ 파일 있음 + current_round == null) → 사용자 확인 후 처리
 
 2. **엔진 선택 질문 (1회)**
    - "Godot 4 / Unity 6 중 어느 엔진으로?"
@@ -31,12 +34,13 @@
 
 4. **substep 순차 실행**
 
-   각 substep 은 다음 패턴:
+   각 substep 은 다음 패턴 — **commit / ITERATION_LOG append / state.yaml 갱신은 각 substep 본문이 자체 수행**, orchestrator 는 성공/실패 신호만 받음:
    ```
    for sub in [0.1, 0.2, 0.3, 0.4]:
-     prompts/prototype-build-loop/round{sub}-*.md 본문 따라 진행
-     성공 → commit + ITERATION_LOG append + state.yaml.current_substep 갱신, 다음 substep
-     실패 → break, 실패 옵션 분기 (§5)
+     prompts/prototype-build-loop/round{sub}-*.md 본문 따라 substep 실행
+       (substep 내부에서 commit + ITERATION_LOG + state.yaml.current_substep 갱신 수행)
+     성공 신호 → 다음 substep 진행
+     실패 신호 → break, 실패 옵션 분기 (§5)
    ```
 
    각 substep 의 본문 prompt 파일:
