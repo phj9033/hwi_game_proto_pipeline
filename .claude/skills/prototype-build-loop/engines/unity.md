@@ -32,6 +32,13 @@ init_command: "(manual)"     # Unity Hub UI 또는 unity-hub CLI
 - §I AC 1 개 → 테스트 메서드 1 개: `[Test] public void Ac_<id>()`
 - 실행: Unity Editor → Test Runner 또는 `unity -batchmode -runTests`
 
+## 에셋 로드 컨벤션
+
+- Placeholder PNG 경로: `Assets/art/{slot_id}.png` (`build/{engine}/` 기준 상대)
+- 로드 패턴: `Resources.Load<Sprite>("art/{slot_id}")` 또는 SerializeField 로 직접 Sprite 참조
+- 교체 시: 동일 파일명·동일 경로면 코드 수정 ✕. sprite size 변경 시만 SpriteRenderer / Image 의 size 조정.
+- art-bible §Z 슬롯 맵의 `통합 위치` 컬럼 = 호출처 (예: `SpeciesIcon.cs:MakeForSpecies`)
+
 ## 프로젝트 init 절차
 
 1. Unity Hub 에서 신규 3D/2D Core 프로젝트 생성 (Unity 6 LTS 선택)

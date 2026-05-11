@@ -33,6 +33,13 @@ init_command: "godot --headless --quit-after 1 --path ."
 - §I AC 1 개 → 테스트 함수 1 개: `func test_ac_<id>():`
 - 실행: `godot --headless -s addons/gut/gut_cmdln.gd`
 
+## 에셋 로드 컨벤션
+
+- Placeholder PNG 경로: `art/{slot_id}.png` (`build/{engine}/` 기준 상대 경로)
+- 로드 패턴: `preload("res://art/{slot_id}.png")` 또는 `load("res://art/{slot_id}.png")`
+- 교체 시: 동일 파일명·동일 경로면 코드 수정 ✕. sprite size 변경 시만 scene 의 sprite 크기 조정.
+- art-bible §Z 슬롯 맵의 `통합 위치` 컬럼 = 호출처 (예: `species_icon.gd:make_for_species`)
+
 ## 프로젝트 init 절차
 
 1. `project.godot` 생성 (engine version 4.3 명시)
