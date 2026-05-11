@@ -28,12 +28,24 @@ SSOT(`06-integrated-spec.md`) 의 §E 비주얼·오디오 톤 + §G.1 어종 �
 - **추가 정보** (시점 문서에서만): 부정 프롬프트 (이 게임에 *없어야 할* 것) — "saturated colors", "anime", "chibi", "happy lighting", "cartoon outline" 등.
 
 ### 2. 에셋 슬롯 맵
-프로젝트 자산을 **슬롯군** 으로 묶는다. 슬롯군당 표 1개:
+프로젝트 자산을 **슬롯군** 으로 묶는다. 슬롯군당 표 1개. **§Z 7-컬럼 형식** 으로 작성:
 
-| 슬롯 ID | 출처 (SSOT 인용) | 해상도 | 포맷 | 통합 위치 (파일·라인) |
-|---|---|---|---|---|
-| `fish_lock_silhouette_01` | §G.1 fs_silhouette_01 | 256×256 | PNG α | `species_icon.gd:make_for_species` |
-| ... | ... | ... | ... | ... |
+| slot_id | category | 해상도 | palette_ref | 포맷 | 통합 위치 | 설명 |
+|---------|----------|-------|-------------|------|---------|------|
+| fish_lock_silhouette_01 | creature | 256x256 | §X.2 (deep ocean) | PNG α | species_icon.gd:make_for_species | §G.1 어종 잠금 실루엣 |
+| ... | ... | ... | ... | ... | ... | ... |
+
+**컬럼 의미** (`prototype-build-loop` 의 auto-build Round 0.4 와 직결 — 컬럼 순서·이름 변경 ✕):
+
+| 컬럼 | 값·규칙 |
+|------|--------|
+| `slot_id` | snake_case 영문 식별자. 파일명·코드 참조용 (`{slot_id}.png`). |
+| `category` | 필수 enum 5종: `creature` / `character` / `object` / `ui` / `effect`. auto-build placeholder 도형·색 매핑용. |
+| `해상도` | `WxH` 형식 (예: `32x32`, `256x256`). |
+| `palette_ref` | 본 art-bible 의 §X (색상·팔레트) 항목 참조 (예: `§X.2 (ocean)`). auto-build placeholder 색상 결정용. |
+| `포맷` | PNG α / PNG / JPG 등. |
+| `통합 위치` | 호출처 파일·라인 (예: `species_icon.gd:make_for_species`). placeholder 교체 시 코드 변경 필요 여부 판단. |
+| `설명` | SSOT 인용 + 1줄 묘사. 출처는 여기에 통합 (별도 컬럼 ✕). 외부 자산 출처 정보는 자동 생성된 `art/{slot_id}.prompt.md` 에 더 자세히 기록됨. |
 
 **필수 슬롯군**:
 - 어종 (잠금/해제 2상태)
