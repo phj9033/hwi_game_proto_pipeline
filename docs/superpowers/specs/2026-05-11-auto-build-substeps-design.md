@@ -186,7 +186,7 @@ build_state:
 
 **현재 art-bible (06b-art-bible.md 출력)** 은 이미 *에셋 슬롯 맵* 테이블을 포함: `슬롯 ID | 출처 | 해상도 | 포맷 | 통합 위치`.
 
-본 spec 은 이 기존 테이블을 **확장** (새 테이블 신설 ✕) 하여 다음 컬럼으로 통합:
+본 spec 은 이 기존 테이블을 **확장 + 재정렬** 하여 다음 7-컬럼 형식으로 교체:
 
 ```markdown
 ## §Z 에셋 슬롯 맵 (확장)
@@ -198,11 +198,14 @@ build_state:
 | hud_bg  | ui | 320x64 | §X.3 (neutral) | PNG | scenes/hud.tscn | 상단 HUD 배경 |
 ```
 
-신규 컬럼 2개: `category` (placeholder 도형·색 규칙용), `palette_ref` (팔레트 참조). 기존 컬럼은 보존.
+**컬럼 변경**:
+- **추가**: `category` (placeholder 도형·색 규칙), `palette_ref` (팔레트 참조)
+- **제거**: `출처` — 출처 정보는 `설명` 컬럼 또는 자동 생성된 `art/{slot_id}.prompt.md` 의 컨텍스트 섹션으로 이전. (사유: 자동 placeholder 가 도입되어 슬롯 맵의 1차 소비자는 gen_placeholders.py 의 positional parser. 출처 메타는 prompt.md 가 더 적합한 위치.)
+- **유지**: `해상도` / `포맷` / `통합 위치` / `설명`
 
-→ `prompts/06b-art-bible.md` 의 출력 템플릿에 위 컬럼 확장을 항상 포함하도록 prompt 수정 (구현 계획 단계 별도 항목). 출처 (출처 컬럼) 도 유지 — Round 0.4 는 출처가 placeholder 인 슬롯만 자동 생성, 외부 자산 출처는 사용자 직접 배치.
+→ `prompts/06b-art-bible.md` 의 출력 템플릿에 위 7-컬럼 형식을 항상 포함하도록 prompt 수정 (구현 계획 단계 별도 항목). Round 0.4 의 `tools/gen_placeholders.py` 의 parser 는 컬럼 순서에 의존하므로 형식 일관성 필수.
 
-기존 프로젝트의 art-bible 에 신규 컬럼이 없으면: Round 0.4 가 LLM 으로 art-bible 본문에서 category·palette_ref 추론, 결과를 art-bible 의 슬롯 맵 컬럼에 보강 append (`06-changelog.md` 에 v0.4 기록).
+기존 프로젝트의 art-bible 에 신규 컬럼이 없으면: Round 0.4 가 LLM 으로 art-bible 본문에서 category·palette_ref 추론, 결과를 art-bible 의 슬롯 맵 컬럼에 보강 + 출처 컬럼은 설명/prompt.md 로 이전 (`06-changelog.md` 에 v0.4 기록).
 
 ### 6.2 카테고리별 placeholder 규칙
 
