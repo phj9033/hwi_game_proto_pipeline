@@ -4,7 +4,7 @@
 
 pipeline:
   name: concept-to-prototype
-  version: "0.5"
+  version: "0.6"
   workspace_root: ./workspace
   language: ko                   # 산출물 한국어 작성
   config_ref: config.yaml
@@ -27,6 +27,15 @@ pipeline:
 #   - 게이트(completion_check) 강화     → patch (0.2 → 0.2.1)
 #   - 호환 ✕ 변경 (재실행 필요)         → major bump (0.x → 1.0)
 changelog:
+  - version: "0.6"
+    date: "2026-05-15"
+    changes:
+      - "auto-build substep 확장: 4개 → 5개. 0.3 'AC1 필수 §C' → '§C 시스템 전체 + §I AC 테스트 일괄'. 0.4 신규 '§D UX 진입로 + §G 콘텐츠 인스턴스 일괄 등록' (사용자가 메뉴부터 1주기까지 플레이 가능한 상태로 완성). 0.5 art placeholder (기존 0.4 이동)."
+      - "auto-build 자동 재시도 한도 변경: substep 당 1회 → 2회. 사용자 옵션 1 (재개) 폐기 — 자동 재시도에 흡수. 모두 실패 시 옵션 2개 (수동 전환·롤백) 만 제시."
+      - "auto-build 진입 시 게이트 검증 결과를 사용자에게 1블록으로 표면화 (단계 7 통과·산출물 4종·build/ 비어있음·current_round)."
+      - "단계 6 iteration_log.schema.round_variants 에 v0.5 신규. v0.3·v0.4 description 갱신 (범위 확장 반영)."
+      - "naming_rule: Round 0 substep 0.1~0.4 → 0.1~0.5 분수 허용."
+      - "state_schema.resume_fields.build_state.current_substep 허용값에 '0.5' 추가 (필드 자체는 동일)."
   - version: "0.5"
     date: "2026-05-11"
     changes:
@@ -102,8 +111,8 @@ state_schema:
     last_user_response_at: ISO 8601 | null
     build_state:                       # 프로토타입 빌드 라운드 상태 (v0.3~)
       current_round: integer | null    # 마지막 완료 라운드 (정수)
-      current_substep: string | null   # 신규 v0.5: "0.1"|"0.2"|"0.3"|"0.4"|null. 자동 빌드 진행 중일 때만 채워짐, 완료/실패 시 null
-      auto_build_status: string | null # 신규 v0.5: in_progress | completed | failed_at_<substep> | null. "completed" 는 프로젝트 lifetime 보존.
+      current_substep: string | null   # v0.5~ (v0.6 에서 "0.5" 추가): "0.1"|"0.2"|"0.3"|"0.4"|"0.5"|null. 자동 빌드 진행 중일 때만 채워짐, 완료/실패 시 null
+      auto_build_status: string | null # v0.5~: in_progress | completed | failed_at_<substep> | null. "completed" 는 프로젝트 lifetime 보존.
       last_snapshot: string | null     # 마지막 git tag (또는 null)
       last_round_at: ISO 8601 | null
       system_keywords: array | null    # SSOT §C·§B 추출 캐시
@@ -130,7 +139,7 @@ state_schema:
   example: |
     project: my-game
     created: 2026-04-28T16:00:00
-    pipeline_version: "0.5"
+    pipeline_version: "0.6"
     current_step: 8                  # 단계 7 게이트 통과 + auto-build 완료 후
     sub_progress:
       section: null
@@ -157,20 +166,20 @@ state_schema:
       changelog: "06-changelog.md"
       engine: "godot"
       build_initialized: true
-    build_state:                      # v0.5: auto-build substep + Round N 추적
+    build_state:                      # v0.5~: auto-build substep + Round N 추적 (v0.6: substep 5개)
       current_round: 0                # auto-build 완료 시 0, Round 1+ 진행 시 정수 증가
-      current_substep: null           # auto-build 진행 중일 때만 "0.1"|"0.2"|"0.3"|"0.4"
+      current_substep: null           # auto-build 진행 중일 때만 "0.1"|"0.2"|"0.3"|"0.4"|"0.5"
       auto_build_status: "completed"  # in_progress | completed | failed_at_0.X | aborted_at_0.X | null
       last_snapshot: null
-      last_round_at: "2026-05-11T10:00:00"
+      last_round_at: "2026-05-15T10:00:00"
       system_keywords: ["코어 루프", "어종 잠금", "..."]
     last_pause_reason: "auto-build 완료, 사용자 첫 라운드 대기"
-    last_pause_at: "2026-05-11T10:00:00"
-    last_user_response_at: "2026-05-11T09:55:00"
+    last_pause_at: "2026-05-15T10:00:00"
+    last_user_response_at: "2026-05-15T09:55:00"
     notes:
       - "2026-04-28T16:00: 신규 프로젝트 시작"
       - "2026-04-28T16:25: 단계 4 평가 완료, 분기 A 선택"
-      - "2026-05-11T10:00: auto-build Round 0.1~0.4 완료 (godot)"
+      - "2026-05-15T10:00: auto-build Round 0.1~0.5 완료 (godot) — 메뉴부터 1주기 플레이 가능"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 단계 정의
@@ -390,20 +399,29 @@ steps:
               - "**구현 §B**: 핵심 메카닉명"
               - "**1 cycle 흐름**: 입력 → 동작 → 결과"
               - "**하드코딩**: 추후 §C 시스템으로 빠질 값 목록"
-          v0.3:                        # v0.5~ : auto-build substep 3 (stop 라인)
-            description: "AC1 필수 §C 시스템 + 테스트 인프라 (실행 가능, pass/fail 무관)"
+          v0.3:                        # v0.6~ : auto-build substep 3 — §C 전체 + AC 일괄 (v0.5 는 AC1 필수만)
+            description: "§C 시스템 전체 구현 + §I AC 테스트 일괄 (실행 가능, pass/fail 무관)"
             fields:
-              - "**구현 §C**: AC1 필수 시스템 N개"
-              - "**AC1 테스트**: 테스트 함수명"
-              - "**실행 결과**: 원문 1~3줄, pass/fail 명시"
-              - "**다음 라운드 권고**: fail 인 경우 가설 진단 1줄"
-          v0.4:                        # v0.5~ : auto-build substep 4
+              - "**구현 §C**: 시스템 N개 — 정상/부분/실패 분류"
+              - "**AC ↔ §C 매핑**: tech-spec §I 인용 또는 LLM 추론"
+              - "**AC 테스트**: 테스트 함수 M개"
+              - "**실행 결과**: 요약 — pass M-x, fail x, 실행 자체 실패 0"
+              - "**다음 라운드 권고**: fail 인 AC 가설 진단 1~3줄, 부분 구현 시스템 명시"
+          v0.4:                        # v0.6~ : auto-build substep 4 — §D UX + §G 콘텐츠 (v0.5 는 art placeholder)
+            description: "§D UX 진입로 + §G 콘텐츠 인스턴스 일괄 등록 (사용자가 메뉴부터 1주기 플레이 가능)"
+            fields:
+              - "**UX 진입로**: 메뉴 → 메인 → 종료, 화면 N개"
+              - "**HUD 상태**: 표시 항목 1~N"
+              - "**콘텐츠 인스턴스**: 카테고리별 count (캐릭터·아이템·맵·이벤트)"
+              - "**1주기 smoke 결과**: pass/fail + 1줄"
+          v0.5:                        # v0.6~ : auto-build substep 5 — art placeholder (v0.5 의 0.4 에서 이동)
             description: "art-bible 슬롯 → PIL placeholder PNG + sibling prompt.md"
             fields:
               - "**슬롯 수**: N"
               - "**카테고리 분포**: creature N, character N, object N, ui N, effect N"
-              - "**placeholder 규칙**: §6.2 표 따름"
+              - "**placeholder 규칙**: gen_placeholders.py 카테고리 매핑"
               - "**프롬프트 파일 경로**: build/{engine}/art/{slot_id}.prompt.md"
+              - "**wired 슬롯**: wiring 된 슬롯 id 목록"
           vN:                          # Round N ≥ 1 — AI 수정 라운드
             description: "사용자 피드백·요청 → AI 패치 → 적용 1 사이클 종료 시"
             fields:
@@ -416,7 +434,7 @@ steps:
           - "변경이 SSOT 룰을 건드리면 → 06-integrated-spec.md 부록 X 에도 1줄 등재"
           - "변경이 신규 시그널/모듈 도입이면 → 06-tech-spec.md 의 시그널 카탈로그 갱신"
           - "변경이 신규 에셋 슬롯이면 → 06-art-bible.md 슬롯 맵 갱신"
-      naming_rule: "Round 0 의 auto-build substep 은 0.1~0.4 분수 허용. Round N ≥ 1 은 정수 단조 증가. v3.1 같은 patch bump 는 같은 사이클 내 보강에만."
+      naming_rule: "Round 0 의 auto-build substep 은 0.1~0.5 분수 허용 (v0.6~, v0.5 는 0.1~0.4). Round N ≥ 1 은 정수 단조 증가. v3.1 같은 patch bump 는 같은 사이클 내 보강에만."
 
   - id: 7
     slug: ready

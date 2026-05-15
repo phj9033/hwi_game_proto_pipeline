@@ -72,11 +72,11 @@ import yaml
 d = yaml.safe_load(open('pipeline.yaml'))
 step6 = next(s for s in d['steps'] if s['id'] == 6)
 rv = step6.get('iteration_log', {}).get('schema', {}).get('round_variants', {})
-expected = ['v0.1', 'v0.2', 'v0.3', 'v0.4']
+expected = ['v0.1', 'v0.2', 'v0.3', 'v0.4', 'v0.5']
 missing = [k for k in expected if k not in rv]
 print('OK' if not missing else 'MISS:' + ','.join(missing))
 ")
-[[ "$ROUND_SUBSTEPS" == "OK" ]] && ok "round_variants v0.1~v0.4 모두 존재 (v0.5+)" || fail "round_variants substep: $ROUND_SUBSTEPS"
+[[ "$ROUND_SUBSTEPS" == "OK" ]] && ok "round_variants v0.1~v0.5 모두 존재 (v0.6+)" || fail "round_variants substep: $ROUND_SUBSTEPS"
 
 # ─── 2. .gitignore ───
 echo ""
@@ -100,8 +100,9 @@ for f in \
   "prompts/prototype-build-loop/auto-build-orchestrator.md" \
   "prompts/prototype-build-loop/round0.1-scaffold.md" \
   "prompts/prototype-build-loop/round0.2-core-loop.md" \
-  "prompts/prototype-build-loop/round0.3-systems-ac1.md" \
-  "prompts/prototype-build-loop/round0.4-art-placeholders.md" \
+  "prompts/prototype-build-loop/round0.3-systems.md" \
+  "prompts/prototype-build-loop/round0.4-content.md" \
+  "prompts/prototype-build-loop/round0.5-art-placeholders.md" \
   ".claude/skills/prototype-build-loop/tools/gen_placeholders.py" \
   ".claude/skills/prototype-build-loop/tools/test_gen_placeholders.py"; do
   [[ -f "$f" ]] && ok "$f" || fail "$f 없음"
