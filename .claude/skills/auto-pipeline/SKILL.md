@@ -164,7 +164,7 @@ worker-report.status 별 디렉터 동작:
 | partial | 1 | 같은 work-order 의 tier=2 재발행 (보강: 에러 로그 + 추가 인용 + 엄격 스키마) |
 | failed | 1 | tier=2 재발행 |
 | partial / failed | 2 | tier=3 재발행 (critic 워커가 work-order 자체를 N개로 분할) |
-| 3 | 누적 5회 도달 | 우회: `state.yaml.auto_state.failed_orders` append, 다음 단계 진행. concept-stage / verify 는 예외 (§예외 정지) |
+| partial / failed | 3 (누적 5회) | 우회: `state.yaml.auto_state.failed_orders` append, 다음 단계 진행. concept-stage / verify 는 예외 (§예외 정지) |
 
 tier 별 보강 항목:
 - **Tier 2**: work-order.inputs 에 직전 worker-report 추가, `policy.strict_schema: true` 추가
