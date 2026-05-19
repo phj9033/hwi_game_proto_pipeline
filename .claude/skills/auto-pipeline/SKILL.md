@@ -35,20 +35,27 @@ description: 컨셉 텍스트와 엔진 선택만 받으면 게임 컨셉 정립
 핵심 동작. 모든 워커 호출은 다음 7단계.
 
 ```
-[1] 다음 work-order 생성 (시퀀스 NNN 증가)
-[2] work-orders/{NNN}-{stage}.yaml 디스크에 기록
-[3] Agent 도구로 워커 디스패치
+[1] 다음 work-order 생성 — order_id = "{NNN}-{stage}" (시퀀스 NNN 증가)
+[2] work-orders/{order_id}.yaml 디스크에 기록
+[3] Agent 도구로 워커 디스패치 — 디렉터가 아래 placeholder 를 *모두 치환 후* dispatch
     - subagent_type: general-purpose
     - description: "{worker_type}: {stage}"
     - prompt:
         "당신은 auto-pipeline 의 {worker_type} 워커.
          work-order 를 읽고 작업 수행:
          work-order: <YAML 내용 인용>
-         워커 매뉴얼: prompts/auto/{worker}.md
+         워커 매뉴얼: prompts/auto/<worker-manual-file>
          (필요시 기존 prompt_file 인용)
-         완료 후 worker-reports/{NNN}-{stage}.md 작성."
-[4] 워커 결과 회수 (마지막 메시지 == worker-report 경로)
-[5] worker-reports/{NNN}-{stage}.md 읽음 (frontmatter 파싱)
+         완료 후 worker-reports/{order_id}.md 작성."
+
+    worker_type → worker-manual-file 매핑:
+      concept-stage  → concept-stage-wrapper.md
+      build-substep  → build-substep-wrapper.md
+      critic         → critic.md
+      verify         → verify.md
+      pkm-fetch      → pkm-fetch.md
+[4] 워커 결과 회수 (마지막 메시지 == worker-report 경로 = worker-reports/{order_id}.md)
+[5] worker-reports/{order_id}.md 읽음 (frontmatter 파싱)
 [6] status 별 분기 (§에스컬레이션)
 [7] state.yaml.auto_state.last_worker_report 갱신 (atomic write)
 ```
@@ -188,7 +195,7 @@ concept-stage / verify 워커가 누적 5회 도달 시:
 
 1. state.yaml 읽음
 2. `auto_state.last_worker_report` 다음 시퀀스부터 디스패치 루프 진입
-3. 진행 중이던 단계가 있으면 (last_worker_report 의 status == in-progress 라면 워커 디스패치 중 중단된 것) tier+1 로 재발행
+3. 마지막 디스패치된 work-order 에 대응하는 worker-report 가 디스크에 *없으면* (워커 디스패치 도중 세션 끊긴 것) → 같은 work-order 를 tier+1 로 재발행 (status 필드는 사용 ✕ — 워커는 in-progress 를 디스크에 남기지 않음)
 
 ## 픽셀아트 디폴트 규칙
 
