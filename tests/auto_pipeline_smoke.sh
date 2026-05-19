@@ -94,6 +94,14 @@ else
   fail "SKILL.md 없음, H2 검사 skip"
 fi
 
+# ─── 5. .gitignore 패턴 ───
+echo ""
+echo "[5] .gitignore auto-pipeline 패턴"
+for pat in "workspace/\*/work-orders/" "workspace/\*/worker-reports/" "workspace/\*/pkm-cache/" "workspace/\*/decisions.log" "workspace/\*/completion-report.md"; do
+  unescaped=$(echo "$pat" | sed 's/\\\*/*/g')
+  grep -qF "$unescaped" .gitignore && ok ".gitignore 에 $unescaped" || fail ".gitignore 에 $unescaped 누락"
+done
+
 echo ""
 echo "─── 결과 ───"
 echo "  PASS: $PASS"
