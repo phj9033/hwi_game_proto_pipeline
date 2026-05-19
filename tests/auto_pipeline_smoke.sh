@@ -76,6 +76,24 @@ for f in work-order-schema.md worker-report-schema.md critic.md verify.md pkm-fe
   [[ -f "prompts/auto/$f" ]] && ok "prompts/auto/$f 존재" || fail "prompts/auto/$f 없음"
 done
 
+# ─── 3. 신규 스킬 파일 존재 ───
+echo ""
+echo "[3] 신규 스킬·슬래시 파일"
+[[ -f ".claude/skills/auto-pipeline/SKILL.md" ]] && ok "SKILL.md 존재" || fail "SKILL.md 없음"
+[[ -f ".claude/commands/auto-pipeline.md" ]] && ok "auto-pipeline.md 슬래시 존재" || fail "auto-pipeline.md 슬래시 없음"
+
+# ─── 4. SKILL.md 필수 H2 헤더 ───
+echo ""
+echo "[4] SKILL.md 필수 H2 헤더"
+SKILL_FILE=".claude/skills/auto-pipeline/SKILL.md"
+if [[ -f "$SKILL_FILE" ]]; then
+  for h in "역할" "부팅" "디스패치 루프" "자동 결정 정책" "종료 조건" "에스컬레이션" "재개"; do
+    grep -q "^## .*$h" "$SKILL_FILE" && ok "## …$h" || fail "## …$h 누락"
+  done
+else
+  fail "SKILL.md 없음, H2 검사 skip"
+fi
+
 echo ""
 echo "─── 결과 ───"
 echo "  PASS: $PASS"
