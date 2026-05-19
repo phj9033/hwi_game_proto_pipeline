@@ -69,6 +69,13 @@ print('OK' if 'failed_orders:' in ex else 'MISS')
 ")
 [[ "$FAILED_ORDERS_FIELD" == "OK" ]] && ok "state_schema example 에 failed_orders 필드" || fail "state_schema example 에 failed_orders 필드"
 
+# ─── 2. prompts/auto/ 파일 존재 ───
+echo ""
+echo "[2] prompts/auto/ 파일 존재"
+for f in work-order-schema.md worker-report-schema.md critic.md verify.md pkm-fetch.md concept-stage-wrapper.md build-substep-wrapper.md; do
+  [[ -f "prompts/auto/$f" ]] && ok "prompts/auto/$f 존재" || fail "prompts/auto/$f 없음"
+done
+
 echo ""
 echo "─── 결과 ───"
 echo "  PASS: $PASS"
