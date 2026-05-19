@@ -47,6 +47,25 @@ else
   COMPLETED_COUNT=$(grep -c "^  - { id:" "$STATE_FILE" 2>/dev/null || echo 0)
 fi
 
+# v0.7~: auto-pipeline mode 분기 — auto-mode 면 별도 안내 후 조기 종료
+if command -v yq >/dev/null 2>&1; then
+  AUTO_MODE=$(yq -r '.auto_state.mode // ""' "$STATE_FILE" 2>/dev/null)
+  LAST_REPORT=$(yq -r '.auto_state.last_worker_report // ""' "$STATE_FILE" 2>/dev/null)
+else
+  AUTO_MODE=$(awk '/^auto_state:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /mode:/{print; exit}' "$STATE_FILE" | sed 's/.*mode: *//' | tr -d '"')
+  LAST_REPORT=$(awk '/^auto_state:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /last_worker_report:/{print; exit}' "$STATE_FILE" | sed 's/.*last_worker_report: *//' | tr -d '"')
+fi
+
+if [[ "$AUTO_MODE" == "auto" ]]; then
+  echo "📌 활성 프로젝트 (auto-pipeline): $SLUG"
+  echo "   현재 단계: $CURRENT_STEP/7"
+  [[ -n "$LAST_REPORT" && "$LAST_REPORT" != "null" ]] && echo "   마지막 워커 보고: $LAST_REPORT"
+  echo ""
+  echo "이어가려면 \"이어서\" 또는 /auto-pipeline"
+  echo "================================"
+  exit 0
+fi
+
 # 단계 이름 매핑
 case "$CURRENT_STEP" in
   1) STEP_NAME="컨셉 정립" ;;

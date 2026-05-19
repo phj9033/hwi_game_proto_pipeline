@@ -25,3 +25,10 @@ workspace/*/build/*/
 __pycache__/
 *.pyc
 *.pyo
+
+# auto-pipeline (v0.7~)
+workspace/*/work-orders/
+workspace/*/worker-reports/
+workspace/*/pkm-cache/
+workspace/*/decisions.log
+workspace/*/completion-report.md

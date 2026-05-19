@@ -4,7 +4,7 @@
 
 pipeline:
   name: concept-to-prototype
-  version: "0.6"
+  version: "0.7"
   workspace_root: ./workspace
   language: ko                   # 산출물 한국어 작성
   config_ref: config.yaml
@@ -27,6 +27,16 @@ pipeline:
 #   - 게이트(completion_check) 강화     → patch (0.2 → 0.2.1)
 #   - 호환 ✕ 변경 (재실행 필요)         → major bump (0.x → 1.0)
 changelog:
+  - version: "0.7"
+    date: "2026-05-19"
+    summary: "auto-pipeline 스킬 도입: 풀자동 컨셉→프로토타입 흐름"
+    breaking_changes: []
+    additions:
+      - "state_schema.example 에 mode, engine_choice, art_default, failed_orders 필드 추가 (auto-pipeline 전용)"
+      - "state_schema.resume_fields 에 auto_state 그룹 신규 (mode, engine_choice, art_default, last_worker_report, failed_orders[])"
+      - "기존 두 스킬 (concept-pipeline, prototype-build-loop) 은 이 필드들을 무시 (backward-compatible)"
+    rationale:
+      - "사용자 입력 2회 (컨셉, 엔진) 로 끝까지 자동 진행하는 별도 진입점 필요 — 기존 두 스킬은 대화형 결정 지점 보존"
   - version: "0.6"
     date: "2026-05-15"
     changes:
@@ -116,6 +126,12 @@ state_schema:
       last_snapshot: string | null     # 마지막 git tag (또는 null)
       last_round_at: ISO 8601 | null
       system_keywords: array | null    # SSOT §C·§B 추출 캐시
+    auto_state:                       # v0.7~: auto-pipeline 전용. mode=manual 이면 전부 무시
+      mode: enum                     # auto | manual
+      engine_choice: enum | null     # godot | unity | null
+      art_default: string            # 디폴트 "pixel_art"
+      last_worker_report: string | null
+      failed_orders: list[string]    # ID 목록
 
   # ───────────────────────────────────────────────────────────────────────────
   # 마이그레이션 메커니즘 (v0.2~)
@@ -139,7 +155,7 @@ state_schema:
   example: |
     project: my-game
     created: 2026-04-28T16:00:00
-    pipeline_version: "0.6"
+    pipeline_version: "0.7"
     current_step: 8                  # 단계 7 게이트 통과 + auto-build 완료 후
     sub_progress:
       section: null
@@ -173,6 +189,12 @@ state_schema:
       last_snapshot: null
       last_round_at: "2026-05-15T10:00:00"
       system_keywords: ["코어 루프", "어종 잠금", "..."]
+    auto_state:                      # v0.7~: auto-pipeline 전용 그룹 (resume_fields.auto_state 와 1:1)
+      mode: auto                     # auto | manual. 기본 manual (기존 호환)
+      engine_choice: null            # godot | unity | null. auto 모드 시작 시 사용자가 즉시 입력
+      art_default: pixel_art         # pixel_art (디폴트) | <override>. 컨셉에 "3D"/"사실풍" 명시 시만 우회
+      failed_orders: []              # 5회 한도 도달 후 우회된 work-order ID 리스트
+      last_worker_report: null       # 가장 최근 완료 worker-report 파일명 (재개 시 다음 번호 산출)
     last_pause_reason: "auto-build 완료, 사용자 첫 라운드 대기"
     last_pause_at: "2026-05-15T10:00:00"
     last_user_response_at: "2026-05-15T09:55:00"
