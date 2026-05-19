@@ -212,6 +212,16 @@ SessionStart 훅:
 
 자세한 내용: [prototype-build-loop spec](docs/superpowers/specs/2026-05-06-prototype-build-loop-design.md)
 
+### auto-pipeline (v0.7~)
+
+기존 두 스킬을 묶어 **컨셉 + 엔진 2회 입력만으로 끝까지 자동** 진행하는 별도 진입점. 결정 지점은 LLM 추천 + critic 자체 비평으로 자동 채택, 종료는 3축 체크리스트 + 라운드 상한으로 판정. 픽셀아트 디폴트 (외부 디자인 툴 부재 환경 가정).
+
+    "/auto-pipeline" 또는 "오토 파이프라인 시작"
+    → 컨셉 텍스트 + 엔진 (godot/unity) 1회 입력
+    → 끝까지 자동 (세션 끊기면 "이어서" 한마디로 재개)
+
+자세한 내용: [auto-pipeline spec](docs/superpowers/specs/2026-05-19-auto-pipeline-design.md)
+
 ## 알려진 이슈 / TODO
 
 - **현재 알려진 이슈 없음** — v0.2 에서 ITERATION_LOG.md 정식 등재 (`pipeline.yaml` 단계 6 `iteration_log` 섹션 참조), session-start.sh 환경변수화, 단계 7 게이트 강화 완료.
