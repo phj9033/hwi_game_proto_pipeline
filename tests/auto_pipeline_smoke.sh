@@ -102,6 +102,16 @@ for pat in "workspace/\*/work-orders/" "workspace/\*/worker-reports/" "workspace
   grep -qF "$unescaped" .gitignore && ok ".gitignore 에 $unescaped" || fail ".gitignore 에 $unescaped 누락"
 done
 
+# ─── 6. session-start.sh 의 auto-mode 분기 ───
+echo ""
+echo "[6] session-start.sh auto-mode 분기"
+HOOK=".claude/hooks/session-start.sh"
+if [[ -f "$HOOK" ]]; then
+  grep -q "mode.*auto" "$HOOK" && ok "session-start.sh 에 auto 분기" || fail "session-start.sh 에 auto 분기 누락"
+else
+  fail "session-start.sh 없음"
+fi
+
 echo ""
 echo "─── 결과 ───"
 echo "  PASS: $PASS"
