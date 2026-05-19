@@ -112,6 +112,18 @@ else
   fail "session-start.sh 없음"
 fi
 
+# ─── 7. 회귀 가드: 기존 두 스킬 무수정 ───
+echo ""
+echo "[7] 회귀 가드 (auto-pipeline-baseline 기준)"
+if git rev-parse auto-pipeline-baseline >/dev/null 2>&1; then
+  DIFF_CONCEPT=$(git diff --name-only auto-pipeline-baseline HEAD -- .claude/skills/concept-pipeline/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+  DIFF_BUILD=$(git diff --name-only auto-pipeline-baseline HEAD -- .claude/skills/prototype-build-loop/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+  [[ "$DIFF_CONCEPT" == "0" ]] && ok "concept-pipeline SKILL.md 무수정" || fail "concept-pipeline SKILL.md 수정됨"
+  [[ "$DIFF_BUILD" == "0" ]] && ok "prototype-build-loop SKILL.md 무수정" || fail "prototype-build-loop SKILL.md 수정됨"
+else
+  echo "  ⚠️  auto-pipeline-baseline 태그 없음 — 회귀 가드 skip (Task 0 미수행)"
+fi
+
 echo ""
 echo "─── 결과 ───"
 echo "  PASS: $PASS"
