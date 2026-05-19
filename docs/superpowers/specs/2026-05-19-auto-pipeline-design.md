@@ -99,7 +99,7 @@ P4 3-tier 에스컬레이션은 디렉터가 일괄 관리. 워커는 시도·�
 
 | 워커 | 입력 | 출력 | 호출 빈도 |
 |------|------|------|----------|
-| **concept-stage** | work-order + prompt (`prompts/0X-*.md`) + 이전 단계 산출물 + PKM 캐시 | `0X-*.md` + worker-report | 단계 1~7 각 1회 (critic 비평 후 1회 재호출 가능) |
+| **concept-stage** | work-order + prompt (`prompts/0X-*.md`) + 이전 단계 산출물 + PKM 캐시 | `0X-*.md` + worker-report | prompt-driven 단계 (1, 2, 4, 5, 6, 6b, 6c) 각 1회 + critic 비평 후 재호출 1회. **단계 3, 7 은 gate-only** (concept-stage 워커 디스패치 ✕, 디렉터가 직접 통과 점검). **단계 6 은 6 → 6b → 6c 순차 3회 디스패치** (SSOT → art-bible → tech-spec) |
 | **critic** | concept-stage / build-substep 1차 출력 | 비평 + 수정안 | 단계마다 1회, build substep Tier 3 진입 시 |
 | **build-substep** | substep 정의 (Round 0.1~0.5 또는 Round N 수정안) + 06-* 3 산출물 + build/ 현재 상태 + 엔진 | 코드 변경 + 빌드 로그 + worker-report | substep 당 1회 (재시도는 디렉터 관리) |
 | **verify** | tech-spec §H AC + SSOT 9섹션 체크리스트 + art-bible 슬롯 + build/ | 3축 점수 + PASS/FAIL + 미달 항목 리스트 | Round 종료마다 1회 |
