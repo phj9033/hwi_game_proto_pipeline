@@ -27,7 +27,47 @@ echo "=== auto-pipeline smoke test ==="
 echo "ROOT: $PIPELINE_ROOT"
 echo ""
 
-# (어서션은 Task 2 이후 순차 추가)
+# ─── 1. pipeline.yaml v0.7+ schema ───
+echo "[1] pipeline.yaml v0.7+ schema"
+VERSION_OK=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('pipeline.yaml'))
+v = d['pipeline']['version'].split('.')
+print('OK' if (int(v[0]), int(v[1])) >= (0, 7) else 'FAIL')
+")
+[[ "$VERSION_OK" == "OK" ]] && ok "pipeline.version >= 0.7" || fail "pipeline.version >= 0.7"
+
+MODE_FIELD=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('pipeline.yaml'))
+ex = d['state_schema'].get('example', '')
+print('OK' if 'mode:' in ex else 'MISS')
+")
+[[ "$MODE_FIELD" == "OK" ]] && ok "state_schema example 에 mode 필드" || fail "state_schema example 에 mode 필드"
+
+ENGINE_CHOICE_FIELD=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('pipeline.yaml'))
+ex = d['state_schema'].get('example', '')
+print('OK' if 'engine_choice:' in ex else 'MISS')
+")
+[[ "$ENGINE_CHOICE_FIELD" == "OK" ]] && ok "state_schema example 에 engine_choice 필드" || fail "state_schema example 에 engine_choice 필드"
+
+ART_DEFAULT_FIELD=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('pipeline.yaml'))
+ex = d['state_schema'].get('example', '')
+print('OK' if 'art_default:' in ex else 'MISS')
+")
+[[ "$ART_DEFAULT_FIELD" == "OK" ]] && ok "state_schema example 에 art_default 필드" || fail "state_schema example 에 art_default 필드"
+
+FAILED_ORDERS_FIELD=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('pipeline.yaml'))
+ex = d['state_schema'].get('example', '')
+print('OK' if 'failed_orders:' in ex else 'MISS')
+")
+[[ "$FAILED_ORDERS_FIELD" == "OK" ]] && ok "state_schema example 에 failed_orders 필드" || fail "state_schema example 에 failed_orders 필드"
 
 echo ""
 echo "─── 결과 ───"
