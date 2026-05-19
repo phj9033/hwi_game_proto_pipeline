@@ -189,11 +189,12 @@ state_schema:
       last_snapshot: null
       last_round_at: "2026-05-15T10:00:00"
       system_keywords: ["코어 루프", "어종 잠금", "..."]
-    mode: auto                       # v0.7~: auto | manual. 기본 manual (기존 호환)
-    engine_choice: null              # v0.7~: godot | unity | null. auto 모드 시작 시 사용자가 즉시 입력
-    art_default: pixel_art           # v0.7~: pixel_art (디폴트) | <override>. 컨셉에 "3D"/"사실풍" 명시 시만 우회
-    failed_orders: []                # v0.7~: 5회 한도 도달 후 우회된 work-order ID 리스트 (auto 모드 추적성)
-    last_worker_report: null         # v0.7~: 가장 최근 완료 worker-report 파일명 (재개 시 다음 번호 산출)
+    auto_state:                      # v0.7~: auto-pipeline 전용 그룹 (resume_fields.auto_state 와 1:1)
+      mode: auto                     # auto | manual. 기본 manual (기존 호환)
+      engine_choice: null            # godot | unity | null. auto 모드 시작 시 사용자가 즉시 입력
+      art_default: pixel_art         # pixel_art (디폴트) | <override>. 컨셉에 "3D"/"사실풍" 명시 시만 우회
+      failed_orders: []              # 5회 한도 도달 후 우회된 work-order ID 리스트
+      last_worker_report: null       # 가장 최근 완료 worker-report 파일명 (재개 시 다음 번호 산출)
     last_pause_reason: "auto-build 완료, 사용자 첫 라운드 대기"
     last_pause_at: "2026-05-15T10:00:00"
     last_user_response_at: "2026-05-15T09:55:00"
