@@ -14,7 +14,7 @@
 | 필드 | 타입 | 필수 | 설명 |
 |------|------|------|------|
 | `order_id` | string | ✓ | 파일명과 동일 |
-| `worker_type` | enum | ✓ | concept-stage | build-substep | critic | verify | pkm-fetch |
+| `worker_type` | enum | ✓ | concept-stage / build-substep / critic / verify / pkm-fetch |
 | `stage` | int \| string | ✓ | 1~7 또는 "r0.1" 등 |
 | `goal` | string | ✓ | 한 문장 작업 목표 |
 | `inputs` | list[path] | ✓ | 워커가 읽을 파일 경로 |
