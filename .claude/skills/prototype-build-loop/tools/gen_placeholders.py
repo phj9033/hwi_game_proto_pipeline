@@ -32,11 +32,17 @@ def parse_slot_map(art_bible_md: str) -> list[dict]:
     Returns: [{slot_id, category, size, palette_ref, format, integration, description}, ...]
     Raises: ValueError — 슬롯 맵 테이블 미발견 시.
     """
-    header_re = re.compile(r"^##\s+§Z[^\n]*$", re.MULTILINE)
+    header_re = re.compile(r"^##\s+(?:§Z|2\.)\s*[^\n]*에셋 슬롯|^##\s+§Z[^\n]*", re.MULTILINE)
     m = header_re.search(art_bible_md)
     if not m:
-        raise ValueError("art-bible 에서 §Z 슬롯 맵 헤더를 찾지 못함")
-    body = art_bible_md[m.end():]
+        # fallback: 첫 번째 slot_id 컬럼 테이블 위치 검색
+        m2 = re.search(r"\|\s*slot_id\s*\|", art_bible_md)
+        if not m2:
+            raise ValueError("art-bible 에서 §Z 슬롯 맵 헤더를 찾지 못함")
+        # m 대신 m2 위치에서 시작 (header 전체 본문)
+        body = art_bible_md[m2.start():]
+    else:
+        body = art_bible_md[m.end():]
     next_h2 = re.search(r"^##\s+", body, re.MULTILINE)
     if next_h2:
         body = body[:next_h2.start()]
