@@ -32,7 +32,44 @@ description: 컨셉 텍스트 1회 입력 → 게임 상세기획서(GDD) · 기
 3. 부재 → 슬러그 1회 입력 받음
 
 ## 흐름
-(전체 7단계 + 4 게이트 로직 — Phase B~F 에서 단계별로 채움)
+
+### Step 0 — 입력 수신
+1. 활성 슬러그 확인 (없으면 사용자에게 새 슬러그 요청 — kebab-case 검증)
+2. "컨셉 텍스트를 붙여넣어 주세요 (분량 자유 — 1문장 ~ 몇 페이지)" 멀티라인 1회 입력
+3. 10자 미만이면 1회 재요청 (그래도 짧으면 그대로 진행)
+4. `workspace/<slug>/concept.md` 에 저장 + `state.yaml` 의 `spec_pipeline.step_0` 채움
+5. `current_step: 1` 로 마킹 후 Step 1 진입
+
+### Step 1 — 장르·메카닉 추론
+1. `prompts/spec/01-inference.md` 의 지시를 따라 `concept.md` 를 분석
+2. 결과를 `workspace/<slug>/inference.yaml` 에 yaml 로 저장
+3. `error: too_short` 인 경우 사용자에게 1~2문장 추가 힌트 요청 → 재추론 1회. 또 실패하면 그대로 진행 (게이트 표시는 빈 inference 로)
+
+### G1 — 추론 결과 확인 (사용자 게이트)
+표시 포맷:
+```
+[추론 결과]
+장르: <genre>
+서브장르: <sub_genres or "—">
+코어 메카닉:
+  1. <name> — <why>
+  2. ...
+플레이어 판타지: <player_fantasy>
+톤·무드: <tone_mood>
+비교작:
+  - <title> — <why>
+  ...
+모호한 차원: <ambiguities or "없음">
+
+[선택]
+  a. 이대로 진행 (accept)
+  e. 특정 필드 수정 (edit)
+  r. 다시 추론 (redo)
+```
+
+- accept → `state.yaml` `gate_g1: { passed_at: <now>, user_action: accept }` → Step 2 진입
+- edit → 사용자가 필드명+새값 입력 → inference.yaml 갱신 → 다시 G1 표시
+- redo → Step 1 재실행 (Phase E8 가드: 동일 게이트 3회 누적 시 "수동 편집 권장" 안내)
 
 ## 기존 스킬과의 관계
 - concept-pipeline / auto-pipeline / prototype-build-loop 와 **독립 진입점**
