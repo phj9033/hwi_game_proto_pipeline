@@ -71,6 +71,32 @@ description: 컨셉 텍스트 1회 입력 → 게임 상세기획서(GDD) · 기
 - edit → 사용자가 필드명+새값 입력 → inference.yaml 갱신 → 다시 G1 표시
 - redo → Step 1 재실행 (Phase E8 가드: 동일 게이트 3회 누적 시 "수동 편집 권장" 안내)
 
+### Step 2 — PKM 회상
+1. `prompts/spec/02-pkm-query.md` 의 지시를 따라 pkm-recall 스킬을 5~7회 순차 호출
+   - 호출 실패 (스킬 없음/오류) 시 `pkm-recall.md` 에 `# SKIPPED: pkm-recall unavailable` 만 쓰고 `state.yaml.step_2.skipped_reason = "pkm-recall unavailable"` 마킹 → G2 건너뛰고 Step 3 으로 직진
+2. 결과를 점수화해 `workspace/<slug>/pkm-recall.md` 의 CANDIDATES 섹션에 ≥ 3점 항목 최대 8개로 저장
+3. CANDIDATES 가 0개면 사용자에게 "관련 PKM 없음 — 그대로 진행" 안내 후 G2 자동 통과
+
+### G2 — PKM 관련성 검증 게이트
+표시 포맷:
+```
+[PKM 회상 결과 — {N}개 후보]
+
+[1] (4.5) [PKM/game-design] 자원관리 게임 자원노드 패턴
+    why: "<core_mechanic #2> 시스템 패턴" 쿼리 매치
+    excerpt: "노드 수보다 노드 가치 다양성이 ..."
+
+[2] (4.1) ...
+
+채택 항목 번호를 쉼표로 (예: 1,3,5)
+또는: "전체" / "건너뛰기"
+선택:
+```
+
+- 채택 항목의 본문을 `pkm-recall.md` 의 `## ADOPTED` 섹션에 복사 (Step 3/5 에서 인용 위해)
+- `state.yaml.spec_pipeline.step_2.gate_g2.adopted_item_ids` 에 ID 배열 저장
+- `state.yaml.last_gate = G2` 마킹 후 Step 3 진입
+
 ## 기존 스킬과의 관계
 - concept-pipeline / auto-pipeline / prototype-build-loop 와 **독립 진입점**
 - 같은 슬러그의 기존 산출물 (예: `06-tech-spec.md`) 과 신규 산출물 (`tech-spec.md`) 은 파일명이 달라 공존
