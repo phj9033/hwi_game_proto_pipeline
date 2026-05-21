@@ -152,6 +152,61 @@ C. <스타일 이름>
 - 선택 받으면 `state.yaml.spec_pipeline.step_4.gate_g4.selected = "A"|"B"|"C"`
 - Step 5 진입
 
+### Step 5 — 병렬 작성 (subagent 2개 동시 디스패치)
+
+**디스패치 시점**: G4 통과 즉시.
+**중요**: 두 Agent 호출을 **동일 응답 메시지 내에서 병렬** 호출 (Agent 툴 2개를 1 응답에 배치).
+
+```
+Agent(
+  subagent_type=general-purpose,
+  description="Tech spec writer",
+  prompt=<prompts/spec/05a-tech.md 의 본문 + 입력 데이터 인라인>
+)
+
+Agent(
+  subagent_type=general-purpose,
+  description="Art spec writer",
+  prompt=<prompts/spec/05b-art.md 의 본문 + 입력 데이터 (선택된 옵션 명시) 인라인>
+)
+```
+
+`state.yaml.spec_pipeline.step_5.subagent_dispatched_at = <now>`.
+
+### Step 5.5 — 사후 검증
+두 워커 보고를 받은 후:
+1. `tech-spec.md` 존재 + 비어있지 않음 + H1 ≥ 10 → 통과. 실패 시 `tech_failed: true` 마킹.
+2. `art-spec.md` 존재 + 비어있지 않음 + H1 ≥ 11 → 통과. 실패 시 `art_failed: true` 마킹.
+3. art-spec §10 의 에셋 프롬프트가 §1 키워드 + §2 hex 중 1개 이상 인용했는지 grep — 누락 행 수 보고 (실패는 ✕, 경고만)
+
+### Step 5.6 — 워커 재시도 (실패한 경우만)
+- 한쪽만 실패 → 동일 프롬프트 1회 재시도 (Agent 1개)
+- 양쪽 실패 → 메인이 인라인 폴백 작성 (GDD 재로드, 토큰 비용 감수)
+- 재시도 후에도 실패 → 사용자에게 어느 문서가 부실한지 보고 + 수동 작성 안내
+
+`state.yaml.spec_pipeline.step_5.subagent_completed_at = <now>`.
+
+### Step 6 — 완료 리포트
+표시 포맷:
+```
+[spec-pipeline 완료]
+산출물:
+  📄 workspace/<slug>/gdd.md          (게임 상세기획서, H1 N개)
+  ⚙️  workspace/<slug>/tech-spec.md    (기술명세서, H1 N개)
+  🎨 workspace/<slug>/art-spec.md     (아트명세서, H1 N개, 슬롯 N개)
+
+주요 결정:
+  - 장르: <genre>
+  - 스타일: <selected style name>
+  - PKM 참조: N개 채택
+
+다음 단계 (선택):
+  - 프로토타입 빌드: "프로토타입 시작" 또는 /prototype-start (별도 입력 필요)
+  - 산출물 검토 후 부분 재작성: /sp-redo step_3 (추후 추가)
+```
+
+`state.yaml.spec_pipeline.status = "done"` 마킹 후 종료.
+
 ## 기존 스킬과의 관계
 - concept-pipeline / auto-pipeline / prototype-build-loop 와 **독립 진입점**
 - 같은 슬러그의 기존 산출물 (예: `06-tech-spec.md`) 과 신규 산출물 (`tech-spec.md`) 은 파일명이 달라 공존
