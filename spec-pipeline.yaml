@@ -1,0 +1,118 @@
+# spec-pipeline — 컨셉 텍스트 → GDD/기술명세서/아트명세서 3개 산출
+# 기존 concept-pipeline 과 독립. 같은 workspace/<slug>/ 에 공존 가능.
+
+pipeline:
+  name: concept-to-specs
+  version: "0.1"
+  workspace_root: ./workspace
+  language: ko
+  backup_dir: .archive
+  backup_naming:
+    rerun: "{step_id}-{slug}-{timestamp}/"
+
+  steps:
+    - id: step_0
+      name: 입력 수신
+      mode: conversation
+      output: concept.md
+    - id: step_1
+      name: 장르·메카닉 추론
+      mode: ai_generation
+      prompt: prompts/spec/01-inference.md
+      output: inference.yaml
+      gate: G1
+    - id: step_2
+      name: PKM 회상
+      mode: pkm_recall
+      prompt: prompts/spec/02-pkm-query.md
+      output: pkm-recall.md
+      gate: G2
+    - id: step_3
+      name: GDD master 생성
+      mode: ai_generation
+      prompt: prompts/spec/03-gdd.md
+      partial_prompt: prompts/spec/03-gdd-partial.md
+      output: gdd.md
+      gate: G3
+    - id: step_4
+      name: 아트 스타일 옵션
+      mode: ai_generation
+      prompt: prompts/spec/04-style-options.md
+      output: style-options.md
+      gate: G4
+    - id: step_5
+      name: 병렬 작성 (tech + art)
+      mode: subagent_parallel
+      subagents:
+        - id: tech-spec-writer
+          prompt: prompts/spec/05a-tech.md
+          output: tech-spec.md
+        - id: art-spec-writer
+          prompt: prompts/spec/05b-art.md
+          output: art-spec.md
+    - id: step_6
+      name: 완료 리포트
+      mode: gate
+
+  gates:
+    G1:
+      after: step_1
+      user_actions: [accept, edit, redo]
+    G2:
+      after: step_2
+      user_actions: [adopt_items, adopt_all, skip]
+      max_items_displayed: 8
+      min_score: 3
+    G3:
+      after: step_3
+      user_actions: [accept, partial-edit, redo]
+      max_redo_loops: 3
+    G4:
+      after: step_4
+      user_actions: [select_a, select_b, select_c]
+
+# ─────────────────────────────────────────────────────────────────────
+# state.yaml 스키마 — spec_pipeline 키 네임스페이스
+# ─────────────────────────────────────────────────────────────────────
+state_schema:
+  namespace: spec_pipeline
+  coexists_with:
+    - concept-pipeline   # 기존 키 (project, current_step 등) 미터치
+  example: |
+    spec_pipeline:
+      version: 1
+      slug: dragon-cafe
+      created_at: 2026-05-21T10:00:00Z
+      updated_at: 2026-05-21T10:42:00Z
+      current_step: 3
+      last_gate: G2
+      status: in_progress
+      step_0:
+        concept_path: concept.md
+        input_chars: 412
+      step_1:
+        inference_path: inference.yaml
+        gate_g1: { passed_at: null, user_action: pending, edits: null }
+      step_2:
+        recall_path: pkm-recall.md
+        raw_items: 0
+        skipped_reason: null
+        gate_g2: { passed_at: null, adopted_item_ids: [] }
+      step_3:
+        gdd_path: gdd.md
+        gate_g3: { passed_at: null, user_action: pending, partial_edits: [] }
+      step_4:
+        style_options_path: style-options.md
+        gate_g4: { passed_at: null, selected: null }
+      step_5:
+        tech_spec_path: tech-spec.md
+        art_spec_path: art-spec.md
+        subagent_dispatched_at: null
+        subagent_completed_at: null
+        tech_failed: false
+        art_failed: false
+
+changelog:
+  - version: "0.1"
+    date: "2026-05-21"
+    summary: "초기 스켈레톤 — 7단계 정의 + 4 게이트 + state_schema"
