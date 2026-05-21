@@ -207,6 +207,42 @@ Agent(
 
 `state.yaml.spec_pipeline.status = "done"` 마킹 후 종료.
 
+## 에러 처리 매트릭스
+
+| # | 시나리오 | 처리 |
+|---|---------|------|
+| E1 | 활성 슬러그 없음 | 슬러그 1회 요청. 빈/공백/충돌 시 재요청 |
+| E2 | 기존 concept-pipeline 진행 중 | spec_pipeline 키 네임스페이스로 공존. "어느 쪽 이어가기?" 1회 확인 |
+| E3 | 컨셉 < 10자 | 1회 재요청. 그래도 짧으면 진행 |
+| E4 | G1 추론 실패 | "1~2문장 추가 힌트" → 재추론 1회. 또 실패 시 빈 inference 로 G1 표시 |
+| E5 | pkm-recall 미설치/오류 | step_2.skipped 마킹 → G2 건너뛰고 Step 3 직진 |
+| E6 | PKM 0 결과/모두 < 3점 | G2 자동 통과 |
+| E7 | G3 partial-edit | 섹션 ID 받아 03-gdd-partial.md 실행. 다른 섹션 보존 |
+| E8 | G3 무한 루프 | 동일 게이트 3회 누적 시 "수동 편집 권장 + abort 옵션" |
+| E9 | G4 스타일 옵션 생성 실패 | 폴백: 픽셀아트/셀룰러/미니멀 3 옵션 |
+| E10 | Step 5 한쪽 워커 실패 | 1회 재시도 후도 실패 → 마킹 + 안내 |
+| E11 | Step 5 양쪽 실패 | 메인 인라인 폴백 |
+| E12 | 재개 시 출력 파일 일부만 존재 | state.yaml + 파일 존재 여부 비교. "보존 / 덮어쓰기" 1회 물음 |
+| E13 | 같은 슬러그 재트리거 (done) | "다시 만들기 / 이어보기" 선택. 다시 만들기 시 .bak 백업 후 새로 |
+| E14 | 슬러그 공백/특수문자 | kebab-case 자동 변환 + 사용자 확인 |
+| E15 | workspace/<slug> 디렉토리 부재 | 자동 생성 |
+
+**state.yaml 손상**: 파싱 실패 → `state.yaml.bak.<ts>` 백업 후 사용자에게 보고. 자동 복구 ✕.
+
+## 재개 로직
+
+세션 진입 시:
+1. `workspace/.active` 의 슬러그 읽기
+2. `workspace/<slug>/state.yaml.spec_pipeline` 키 존재 여부 확인
+3. `last_gate` 기준 entry point 결정:
+   - null → step_0
+   - G1 → step_2
+   - G2 → step_3
+   - G3 → step_4
+   - G4 → step_5
+4. 해당 entry 의 출력 파일 존재하면 LLM 재추론 ✕, 디스크에서 로드만
+5. `status == done` 이면 "이미 완료됨 — 다시 만들기 (재시작) / 종료 / 다른 슬러그" 옵션 표시
+
 ## 기존 스킬과의 관계
 - concept-pipeline / auto-pipeline / prototype-build-loop 와 **독립 진입점**
 - 같은 슬러그의 기존 산출물 (예: `06-tech-spec.md`) 과 신규 산출물 (`tech-spec.md`) 은 파일명이 달라 공존
