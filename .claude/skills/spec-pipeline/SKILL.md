@@ -97,6 +97,35 @@ description: 컨셉 텍스트 1회 입력 → 게임 상세기획서(GDD) · 기
 - `state.yaml.spec_pipeline.step_2.gate_g2.adopted_item_ids` 에 ID 배열 저장
 - `state.yaml.last_gate = G2` 마킹 후 Step 3 진입
 
+### Step 3 — GDD master 생성
+1. `prompts/spec/03-gdd.md` 의 지시를 따라 `workspace/<slug>/gdd.md` 작성
+2. 작성 후 H1 개수 검증 — 12개 미만이면 1회 재시도. 그래도 실패하면 사용자에게 보고
+3. `state.yaml.spec_pipeline.step_3.gdd_path = "gdd.md"` 마킹
+
+### G3 — GDD 초안 확인
+표시 포맷:
+```
+[GDD 초안 — gdd.md (헤딩 12/12)]
+
+# 1. 한 줄 정의 + 엘리베이터 피치
+<본문 일부 첫 200자>
+...
+
+# 2. 플레이어 판타지 / 타겟 / 톤
+<...>
+... (각 섹션 첫 200자만 요약 표시)
+
+[선택]
+  a. 이대로 진행 (accept)
+  p. 섹션 부분 수정 (partial-edit)  — 섹션 번호 쉼표 입력 (예: §4.2, §7)
+  r. 전체 다시 작성 (redo)
+```
+
+- accept → `gate_g3: { passed_at: <now>, user_action: accept }` → Step 4 진입
+- partial-edit → 섹션 ID 받음 + (선택) 사용자 추가 지시 1~2문장 받음 → `03-gdd-partial.md` 실행 → 다시 G3 표시
+- redo → Step 3 재실행
+- **3회 누적 (G3 표시 카운트 ≥ 3) 시**: "G3 가 3번째입니다. 수동 편집을 권장합니다 (현재 gdd.md 그대로 두고 Step 4 로 진행 / 일시 abort) — 선택?" 표시
+
 ## 기존 스킬과의 관계
 - concept-pipeline / auto-pipeline / prototype-build-loop 와 **독립 진입점**
 - 같은 슬러그의 기존 산출물 (예: `06-tech-spec.md`) 과 신규 산출물 (`tech-spec.md`) 은 파일명이 달라 공존
