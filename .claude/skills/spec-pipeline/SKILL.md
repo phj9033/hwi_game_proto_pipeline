@@ -126,6 +126,32 @@ description: 컨셉 텍스트 1회 입력 → 게임 상세기획서(GDD) · 기
 - redo → Step 3 재실행
 - **3회 누적 (G3 표시 카운트 ≥ 3) 시**: "G3 가 3번째입니다. 수동 편집을 권장합니다 (현재 gdd.md 그대로 두고 Step 4 로 진행 / 일시 abort) — 선택?" 표시
 
+### Step 4 — 아트 스타일 옵션
+1. `prompts/spec/04-style-options.md` 의 지시를 따라 `workspace/<slug>/style-options.md` 작성
+2. Option A/B/C 3개 모두 존재하는지 검증 (각 ## H2 헤더 확인)
+
+### G4 — 아트 스타일 선택
+표시 포맷:
+```
+[아트 스타일 후보 3개]
+
+A. <스타일 이름>
+   레퍼런스: <키워드>
+   팔레트: <5색 hex>
+   어울리는 이유: <한 줄>
+
+B. <스타일 이름>
+   ...
+
+C. <스타일 이름>
+   ...
+
+선택 (a/b/c):
+```
+
+- 선택 받으면 `state.yaml.spec_pipeline.step_4.gate_g4.selected = "A"|"B"|"C"`
+- Step 5 진입
+
 ## 기존 스킬과의 관계
 - concept-pipeline / auto-pipeline / prototype-build-loop 와 **독립 진입점**
 - 같은 슬러그의 기존 산출물 (예: `06-tech-spec.md`) 과 신규 산출물 (`tech-spec.md`) 은 파일명이 달라 공존
