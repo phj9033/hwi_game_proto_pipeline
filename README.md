@@ -222,6 +222,19 @@ SessionStart 훅:
 
 자세한 내용: [auto-pipeline spec](docs/superpowers/specs/2026-05-19-auto-pipeline-design.md)
 
+### spec-pipeline (v0.1~)
+
+**컨셉 텍스트 1회 입력으로 3개 명세서 (GDD + 기술명세서 + 아트명세서) 를 자동 생성**하는 별도 진입점. 기존 7단계 컨셉 파이프라인과 독립. pkm-recall 1회 응축 호출로 사용자 개인 PKM 지식을 GDD/tech/art 생성에 반영한다.
+
+```
+"/spec-pipeline" 또는 "스펙 파이프라인 시작"
+  → 컨셉 텍스트 + 4 게이트 (장르 추론 / PKM 관련성 / GDD 초안 / 아트 스타일 선택)
+  → 끝단 2 문서 병렬 subagent 작성
+  → workspace/<slug>/{gdd,tech-spec,art-spec}.md
+```
+
+자세한 내용: [spec-pipeline spec](docs/superpowers/specs/2026-05-21-spec-pipeline-design.md) · [구현 plan](docs/superpowers/plans/2026-05-21-spec-pipeline.md)
+
 ## 알려진 이슈 / TODO
 
 - **현재 알려진 이슈 없음** — v0.2 에서 ITERATION_LOG.md 정식 등재 (`pipeline.yaml` 단계 6 `iteration_log` 섹션 참조), session-start.sh 환경변수화, 단계 7 게이트 강화 완료.
